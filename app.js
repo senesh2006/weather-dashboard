@@ -77,6 +77,11 @@ const els = {
   favList: $('favourites-list'),
   favEmpty: $('favourites-empty'),
   aqiBadge: $('aqi-badge'),
+  seaBadge: $('sea-state-badge'),
+  seaSummary: $('sea-summary-text'),
+  seaArrow: $('current-arrow'),
+  seaStrip: $('sea-strip'),
+  seaNote: $('sea-note'),
   mapEl: $('leaflet-map'),
 };
 
@@ -232,16 +237,103 @@ function airQualityUrl(place) {
   });
   return `${API.airQuality}?${p.toString()}`;
 }
-function marineUrl(place) {
+function marineUrl(place, cellSelection) {
   const p = new URLSearchParams({
     latitude: String(place.lat),
     longitude: String(place.lon),
-    current: 'wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period',
-    hourly: 'wave_height,swell_wave_height,sea_surface_temperature',
+    current: [
+      'wave_height', 'wave_direction', 'wave_period',
+      'wind_wave_height', 'wind_wave_direction',
+      'swell_wave_height', 'swell_wave_direction', 'swell_wave_period',
+      'sea_surface_temperature',
+      'ocean_current_velocity', 'ocean_current_direction',
+      'sea_level_height_msl',
+    ].join(','),
+    hourly: 'wave_height,ocean_current_velocity,ocean_current_direction,sea_level_height_msl,sea_surface_temperature',
     timezone: 'Asia/Colombo',
-    forecast_days: '1',
+    forecast_days: '2',
   });
+  // "sea" prefers an actual sea grid cell (better near the coast), but returns
+  // nulls far inland — fetchMarine() falls back to the nearest cell.
+  if (cellSelection) p.set('cell_selection', cellSelection);
   return `${API.marine}?${p.toString()}`;
+}
+
+// Coastal reference points (~40 km apart around the island). Used only when a
+// city is far enough inland that the marine model returns no data: we then show
+// conditions for the nearest coast, clearly labelled as such.
+const COAST_POINTS = [
+  { si: 'මාන්නාරම', lat: 8.98, lon: 79.90 },
+  { si: 'තලෙයිමන්නාරම', lat: 9.10, lon: 79.73 },
+  { si: 'පුත්තලම', lat: 8.03, lon: 79.83 },
+  { si: 'හලාවත', lat: 7.58, lon: 79.79 },
+  { si: 'මීගමුව', lat: 7.21, lon: 79.83 },
+  { si: 'කොළඹ', lat: 6.93, lon: 79.84 },
+  { si: 'මවුන්ට් ලැවිනියා', lat: 6.83, lon: 79.86 },
+  { si: 'පානදුර', lat: 6.71, lon: 79.90 },
+  { si: 'කළුතර', lat: 6.58, lon: 79.96 },
+  { si: 'බෙන්තොට', lat: 6.42, lon: 79.99 },
+  { si: 'අම්බලන්ගොඩ', lat: 6.24, lon: 80.05 },
+  { si: 'හික්කඩුව', lat: 6.14, lon: 80.10 },
+  { si: 'ගාල්ල', lat: 6.03, lon: 80.22 },
+  { si: 'මාතර', lat: 5.95, lon: 80.55 },
+  { si: 'හම්බන්තොට', lat: 6.12, lon: 81.12 },
+  { si: 'කිරින්ද', lat: 6.21, lon: 81.28 },
+  { si: 'යාල', lat: 6.37, lon: 81.45 },
+  { si: 'පානම', lat: 6.75, lon: 81.80 },
+  { si: 'අරුගම් බොක්ක', lat: 6.84, lon: 81.83 },
+  { si: 'මඩකලපුව', lat: 7.71, lon: 81.70 },
+  { si: 'ත්‍රිකුණාමලය', lat: 8.58, lon: 81.23 },
+  { si: 'පුල්මොඩ්ඩෙයි', lat: 8.95, lon: 81.00 },
+  { si: 'මුලතිව්', lat: 9.27, lon: 80.81 },
+  { si: 'පේදුරු තුඩුව', lat: 9.82, lon: 80.23 },
+  { si: 'යාපනය', lat: 9.66, lon: 80.01 },
+  { si: 'ඩෙල්ෆ්ට්', lat: 9.51, lon: 79.69 },
+];
+
+function haversineKm(a, b) {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+function nearestCoast(place) {
+  let best = null;
+  for (const p of COAST_POINTS) {
+    const d = haversineKm(place, p);
+    if (!best || d < best.distanceKm) best = { ...p, distanceKm: d };
+  }
+  return best;
+}
+
+const hasMarineValues = (m) =>
+  !!(m && m.current && ['wave_height', 'ocean_current_velocity', 'sea_surface_temperature']
+    .some((k) => typeof m.current[k] === 'number'));
+
+// Currents/tides come from MeteoFrance SMOC via Copernicus Marine (0.08° grid).
+// Near a coast we ask for a sea cell; inland we retry, then fall back to the
+// nearest coastal reference point so the card is never just empty dashes.
+async function fetchMarine(place) {
+  try {
+    const sea = await fetchJSON(marineUrl(place, 'sea'));
+    if (hasMarineValues(sea)) return sea;
+
+    const nearest = await fetchJSON(marineUrl(place));
+    if (hasMarineValues(nearest)) { nearest._inlandFallback = true; return nearest; }
+
+    const coast = nearestCoast(place);
+    const atCoast = await fetchJSON(marineUrl({ lat: coast.lat, lon: coast.lon }, 'sea'));
+    if (hasMarineValues(atCoast)) {
+      atCoast._nearestCoast = { si: coast.si, distanceKm: coast.distanceKm };
+      return atCoast;
+    }
+    return nearest;
+  } catch {
+    return fetchJSON(marineUrl(place));
+  }
 }
 
 /* ---------- load ---------- */
@@ -263,7 +355,7 @@ async function loadWeather(place, { silent = false } = {}) {
     const [fc, aq, ma] = await Promise.allSettled([
       fetchJSON(forecastUrl(place)),
       fetchJSON(airQualityUrl(place)),
-      fetchJSON(marineUrl(place)),
+      fetchMarine(place),
     ]);
     if (fc.status === 'rejected') throw fc.reason;
     state.forecast = fc.value;
@@ -500,25 +592,125 @@ function renderAirQuality() {
   els.aqiBadge.style.background = color;
 }
 
-/* ---------- render: marine ---------- */
+/* ---------- render: marine / sea ---------- */
+function compassSi(deg) {
+  if (deg == null) return null;
+  return ['උතුර', 'ඊසාන', 'නැගෙනහිර', 'ගිනිකොණ', 'දකුණ', 'නිරිත', 'බටහිර', 'වයඹ'][Math.round(deg / 45) % 8];
+}
+const waveFromText = (deg) => (deg == null ? '—' : `${compassSi(deg)} සිට`);
+const currentToText = (deg) => (deg == null ? '—' : `${compassSi(deg)} දෙසට`);
+
+// Douglas sea scale, condensed for a simple badge
+function seaState(h) {
+  if (h == null) return { label: 'දත්ත නැත', color: '#64748b' };
+  if (h < 0.5) return { label: 'සන්සුන්', color: '#16a34a' };
+  if (h < 1.25) return { label: 'මධ්‍යස්ථ', color: '#65a30d' };
+  if (h < 2.5) return { label: 'තරමක් රළු', color: '#ca8a04' };
+  if (h < 4) return { label: 'රළු', color: '#d97706' };
+  return { label: 'ඉතා රළු', color: '#dc2626' };
+}
+
 function renderMarine() {
   const m = state.marine;
-  if (!m || !m.current) {
-    ['marine-wave', 'marine-period', 'marine-swell', 'marine-sst'].forEach((id) => { $(id).textContent = '—'; });
+  const c = m && m.current;
+  const ids = ['marine-wave', 'marine-wave-dir', 'marine-period', 'marine-current-dir',
+    'marine-sealevel', 'marine-sst', 'marine-windwave', 'marine-swell', 'marine-swell-dir'];
+
+  if (!hasMarineValues(m)) {
+    ids.forEach((id) => { const el = $(id); if (el) el.textContent = '—'; });
+    if (els.seaBadge) { els.seaBadge.textContent = 'දත්ත නැත'; els.seaBadge.style.background = '#64748b'; }
+    if (els.seaArrow) els.seaArrow.style.transform = 'rotate(0deg)';
+    $('marine-current').textContent = '—';
+    if (els.seaSummary) els.seaSummary.textContent = 'මුහුදු දත්ත නොමැත.';
+    if (els.seaStrip) els.seaStrip.innerHTML = '';
+    if (els.seaNote) {
+      els.seaNote.textContent = m && m._inlandFallback
+        ? 'මෙම ස්ථානය මුහුදට දුරින් — මුහුදු දත්ත නොමැත. නිල අනතුරු ඇඟවීම් සඳහා meteo.gov.lk බලන්න.'
+        : 'මුහුදු දත්ත ලබාගත නොහැක. නිල අනතුරු ඇඟවීම් සඳහා meteo.gov.lk බලන්න.';
+    }
     return;
   }
-  const c = m.current;
-  $('marine-wave').textContent = c.wave_height != null ? `${c.wave_height.toFixed(2)} m` : '—';
+
+  const wave = c.wave_height;
+  $('marine-wave').textContent = wave != null ? `${wave.toFixed(2)} m` : '—';
+  $('marine-wave-dir').textContent = waveFromText(c.wave_direction);
   $('marine-period').textContent = c.wave_period != null ? `${c.wave_period.toFixed(1)} s` : '—';
+  $('marine-current-dir').textContent = currentToText(c.ocean_current_direction);
+  $('marine-sealevel').textContent = c.sea_level_height_msl != null
+    ? `${c.sea_level_height_msl >= 0 ? '+' : ''}${c.sea_level_height_msl.toFixed(2)} m` : '—';
+  $('marine-windwave').textContent = c.wind_wave_height != null ? `${c.wind_wave_height.toFixed(2)} m` : '—';
   $('marine-swell').textContent = c.swell_wave_height != null ? `${c.swell_wave_height.toFixed(2)} m` : '—';
-  let sst = null;
-  if (m.hourly && m.hourly.sea_surface_temperature && m.hourly.time) {
-    const key = colomboNow().hour;
-    let idx = m.hourly.time.findIndex((t) => hourKey(t) === key);
+  $('marine-swell-dir').textContent = waveFromText(c.swell_wave_direction);
+
+  const currentSpeed = c.ocean_current_velocity;
+  $('marine-current').textContent = currentSpeed != null ? `${currentSpeed.toFixed(1)} km/h` : '—';
+
+  // SST: current may omit it, so use the nearest hourly value if needed
+  let sst = c.sea_surface_temperature;
+  if (sst == null && m.hourly && m.hourly.time && m.hourly.sea_surface_temperature) {
+    let idx = m.hourly.time.findIndex((t) => hourKey(t) === colomboNow().hour);
     if (idx < 0) idx = m.hourly.time.length - 1;
     sst = m.hourly.sea_surface_temperature[idx];
   }
   $('marine-sst').textContent = sst != null ? fmtTemp(sst) : '—';
+
+  // Badge + dial + summary
+  const st = seaState(wave);
+  if (els.seaBadge) { els.seaBadge.textContent = st.label; els.seaBadge.style.background = st.color; }
+  if (els.seaArrow) {
+    els.seaArrow.style.transform = `rotate(${c.ocean_current_direction != null ? c.ocean_current_direction : 0}deg)`;
+  }
+  if (els.seaSummary) {
+    const bits = [];
+    if (wave != null) bits.push(`රැලි ${wave.toFixed(2)} m`);
+    if (currentSpeed != null) bits.push(`ධාරාව ${currentSpeed.toFixed(1)} km/h ${currentToText(c.ocean_current_direction)}`);
+    if (sst != null) bits.push(`ජලය ${fmtTemp(sst)}`);
+    els.seaSummary.textContent = bits.join(' · ');
+  }
+  if (els.seaNote) {
+    if (m._nearestCoast) {
+      const nc = m._nearestCoast;
+      els.seaNote.textContent = `මෙම ස්ථානය මුහුදට දුරින්. ළඟම වෙරළ වන ${nc.si} (පමණ ${Math.round(nc.distanceKm)} km) සඳහා දත්ත පෙන්වයි — මෙම ස්ථානයට නොවේ. නිල අනතුරු ඇඟවීම් සඳහා meteo.gov.lk බලන්න.`;
+    } else if (m._inlandFallback) {
+      els.seaNote.textContent = 'මෙම ස්ථානය මුහුදට දුරින් — මුහුදු දත්ත ආසන්න අගයක් පමණි. නිල අනතුරු ඇඟවීම් සඳහා meteo.gov.lk බලන්න.';
+    } else {
+      els.seaNote.textContent = 'මූලාශ්‍ර: MeteoFrance SMOC (ධාරා හා වේලා) සහ MFWAM (රැලි), Copernicus Marine හරහා · Open-Meteo. මෙය නාවික සංචාලනයට නොවේ.';
+    }
+  }
+
+  renderSeaStrip();
+}
+
+function renderSeaStrip() {
+  if (!els.seaStrip) return;
+  els.seaStrip.innerHTML = '';
+  const m = state.marine;
+  if (!m || !m.hourly || !m.hourly.time) return;
+
+  const now = colomboNow();
+  let start = m.hourly.time.findIndex((t) => t >= now.key);
+  if (start < 0) start = 0;
+
+  const count = Math.min(12, m.hourly.time.length - start);
+  for (let n = 0; n < count; n++) {
+    const i = start + n;
+    const wave = m.hourly.wave_height ? m.hourly.wave_height[i] : null;
+    const speed = m.hourly.ocean_current_velocity ? m.hourly.ocean_current_velocity[i] : null;
+    const dir = m.hourly.ocean_current_direction ? m.hourly.ocean_current_direction[i] : null;
+    const isNow = n === 0 && hourKey(m.hourly.time[i]) === now.hour;
+    const box = document.createElement('div');
+    box.className = 'sea-box';
+    box.innerHTML = `
+      <div class="muted small">${isNow ? 'දැන්' : clockOf(m.hourly.time[i])}</div>
+      <div class="sea-ico" title="රැලි">🌊</div>
+      <div class="sea-wave">${wave != null ? wave.toFixed(2) + ' m' : '—'}</div>
+      <div class="sea-cur" title="ධාරාව ${currentToText(dir)}">
+        <span class="cur-arrow" style="transform:rotate(${dir != null ? dir : 0}deg)">↑</span>
+        ${speed != null ? speed.toFixed(1) : '—'}
+      </div>
+    `;
+    els.seaStrip.appendChild(box);
+  }
 }
 
 /* ---------- navigation ---------- */

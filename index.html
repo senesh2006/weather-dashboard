@@ -165,18 +165,51 @@
         </article>
 
         <!-- මුහුදු -->
-        <article class="card" aria-label="මුහුදු තත්ත්වය">
+        <article class="card sea-card" aria-label="මුහුදු තත්ත්වය">
           <div class="card-head">
-            <h2>මුහුදු / වෙරළ</h2>
-            <span class="badge soft">Open-Meteo Marine</span>
+            <h2>මුහුදු තත්ත්වය</h2>
+            <span id="sea-state-badge" class="badge">—</span>
           </div>
-          <div class="aqi-grid">
+
+          <div class="sea-visual">
+            <div class="current-dial" role="img" aria-label="ධාරා දිශාව දර්ශකය">
+              <span class="dial-c dial-n">උ</span>
+              <span class="dial-c dial-e">නැ</span>
+              <span class="dial-c dial-s">ද</span>
+              <span class="dial-c dial-w">බ</span>
+              <div class="dial-arrow" id="current-arrow">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 2l6 9h-3.5v11h-5V11H6z" fill="currentColor"/></svg>
+              </div>
+              <div class="dial-center">
+                <strong id="marine-current">—</strong>
+                <span class="muted">ධාරාව</span>
+              </div>
+            </div>
+            <div class="sea-summary">
+              <p id="sea-summary-text">—</p>
+              <p class="muted small">ධාරාව ගමන් කරන දිශාව (ඊතලය). රැලි පැමිණෙන දිශාව වෙනස් ය.</p>
+            </div>
+          </div>
+
+          <div class="sea-grid">
             <div class="meta"><span class="meta-label">රැලි උස</span><strong id="marine-wave">—</strong></div>
+            <div class="meta"><span class="meta-label">රැලි දිශාව</span><strong id="marine-wave-dir">—</strong></div>
             <div class="meta"><span class="meta-label">රැලි කාලය</span><strong id="marine-period">—</strong></div>
+            <div class="meta"><span class="meta-label">ධාරා දිශාව</span><strong id="marine-current-dir">—</strong></div>
+            <div class="meta"><span class="meta-label">මුහුදු මට්ටම</span><strong id="marine-sealevel">—</strong></div>
+            <div class="meta"><span class="meta-label">ජල උෂ්ණත්වය</span><strong id="marine-sst">—</strong></div>
+            <div class="meta"><span class="meta-label">සුළං රැලි</span><strong id="marine-windwave">—</strong></div>
             <div class="meta"><span class="meta-label">ඉදිමුම් උස</span><strong id="marine-swell">—</strong></div>
-            <div class="meta"><span class="meta-label">මුහුදු උෂ්ණත්වය</span><strong id="marine-sst">—</strong></div>
+            <div class="meta"><span class="meta-label">ඉදිමුම් දිශාව</span><strong id="marine-swell-dir">—</strong></div>
           </div>
-          <p class="muted small">ළඟම වෙරළ ඛණ්ඩාංකය. මුහුදට බැසීමට පෙර නිල අනතුරු ඇඟවීම් පරීක්ෂා කරන්න.</p>
+
+          <div class="card-head" style="margin:14px 0 6px">
+            <h3 style="margin:0;font-size:.9rem">ඉදිරි පැය — මුහුද</h3>
+            <span class="muted small">රැලි · ධාරාව</span>
+          </div>
+          <div id="sea-strip" class="sea-strip" aria-label="ඉදිරි පැය සඳහා මුහුදු තත්ත්වය"></div>
+
+          <p id="sea-note" class="muted small">මූලාශ්‍ර: MeteoFrance SMOC (ධාරා හා වේලා) සහ MFWAM (රැලි), Copernicus Marine හරහා · Open-Meteo. මෙය නාවික සංචාලනයට නොවේ.</p>
         </article>
 
         <!-- එක බැල්මට -->
@@ -241,7 +274,7 @@
           <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo Forecast API</a> — දැනට, පැයක සහ දෛනික කාලගුණය. ECMWF IFS, GFS, ICON ඇතුළු අනාවැකි ආකෘතිවලින් Open-Meteo හරහා. නොමිලේ, API යතුරක් නොමැතිව, <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">CC-BY 4.0</a>.</li>
           <li><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">Open-Meteo Geocoding API</a> — ශ්‍රී ලාංකික ස්ථාන නාම අක්ෂාංශ/දේශාංශ බවට හරවයි.</li>
           <li><a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">Open-Meteo Air Quality API</a> — US AQI, PM2.5, PM10, O₃, NO₂ සහ දූවිලි, Copernicus Atmosphere Monitoring Service (CAMS) වෙතින්.</li>
-          <li><a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine Weather API</a> — රැලි උස, කාලය, ඉදිමුම් සහ මුහුදු ජල උෂ්ණත්වය.</li>
+          <li><a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine Weather API</a> — රැලි, ඉදිමුම්, සුළං රැලි, මුහුදු ජල උෂ්ණත්වය, මුහුදු මට්ටම (වේලා ඇතුළුව) සහ සාගර ධාරා (වේගය හා දිශාව). ධාරා හා වේලා MeteoFrance SMOC වෙතින්; රැලි MFWAM වෙතින් — Copernicus Marine හරහා.</li>
           <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">ශ්‍රී ලංකා කාලගුණ විද්‍යා දෙපාර්තමේන්තුව</a> — නිල අනතුරු ඇඟවීම්, මෝසම් / චක්‍රවාත උපදෙස්. <strong>නිල අනතුරු ඇඟවීම් සහ ආරක්ෂාව සඳහා සැමවිටම meteo.gov.lk බලන්න.</strong></li>
           <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> — Leaflet හරහා සිතියම්.</li>
         </ul>
@@ -249,7 +282,7 @@
         <h3>සටහන් සහ සීමාවන්</h3>
         <ul class="plain-list">
           <li>සියලු වේලාවන් ශ්‍රී ලංකා වේලාවෙන් (Asia/Colombo, UTC+5:30) පෙන්වයි.</li>
-          <li>මුහුදු දත්ත ළඟම වෙරළ ඛණ්ඩාංකයෙන් ලබාගනී — ගොඩබිම් නගර සඳහා එය ආසන්න අගයක් පමණි.</li>
+          <li>මුහුදු දත්ත සඳහා වෙරළට ආසන්න සාගර ඛණ්ඩාංකයක් භාවිතා කරයි. ගොඩබිම් නගර සඳහා එය ආසන්න අගයක් පමණි. මෙම දත්ත නාවික සංචාලනයට නොවේ — නාවික ඇල්මනැක් සහ නිල අනතුරු ඇඟවීම් භාවිතා කරන්න.</li>
           <li>අනාවැකි ආකෘතිවල ප්‍රතිඵල වන අතර වෙනස් විය හැක. විශේෂයෙන් මෝසම් කාලවලදී (යල: මැයි–සැප්තැම්බර්, මහ: ඔක්තෝබර්–පෙබරවාරි) නිල අනතුරු ඇඟවීම් සඳහා කාලගුණ විද්‍යා දෙපාර්තමේන්තුව බලන්න.</li>
           <li>මෙය ස්ථිතික වෙබ් යෙදුමකි. ලියාපදිංචියක් නැත. ප්‍රියතම නගර ඔබේ බ්‍රවුසරයේ (localStorage) පමණක් සුරකියි.</li>
         </ul>
