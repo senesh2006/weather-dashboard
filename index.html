@@ -1,96 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sri Lanka Weather Dashboard — live current weather, hourly and 7-day forecast, air quality, marine conditions and map for cities across Sri Lanka. Powered by Open-Meteo." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="SSS Sea Food Suppliers — ශ්‍රී ලංකා කාලගුණ උපකරණ පුවරුව. දැනට කාලගුණය, පැය 24 සහ දින 7 අනාවැකිය, වායු ගුණාත්මකභාවය, මුහුදු තත්ත්වය සහ සිතියම. දත්ත: Open-Meteo." />
   <meta name="theme-color" content="#0b3d5c" />
-  <title>Sri Lanka Weather Dashboard</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌦️</text></svg>" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SSS Sea Food" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>SSS Sea Food Suppliers — කාලගුණ උපකරණ පුවරුව</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐟</text></svg>" />
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://api.open-meteo.com" />
   <link rel="preconnect" href="https://geocoding-api.open-meteo.com" />
   <link rel="preconnect" href="https://air-quality-api.open-meteo.com" />
   <link rel="preconnect" href="https://marine-api.open-meteo.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to main content</a>
+  <a class="skip-link" href="#main">ප්‍රධාන අන්තර්ගතයට යන්න</a>
+
+  <div id="loadbar" class="loadbar" role="progressbar" aria-label="පූරණය වෙමින්" hidden></div>
 
   <header class="site-header">
     <div class="header-inner">
-      <a href="#" class="brand" data-nav="dashboard" aria-label="Sri Lanka Weather Dashboard home">
-        <span class="brand-icon" aria-hidden="true">🌦️</span>
+      <a href="#" class="brand" data-nav="dashboard" aria-label="SSS Sea Food Suppliers — මුල් පිටුව">
+        <span class="brand-icon" aria-hidden="true">🐟</span>
         <span class="brand-text">
-          <strong>Sri Lanka Weather</strong>
-          <small>Dashboard</small>
+          <strong>SSS Sea Food Suppliers</strong>
+          <small>කාලගුණ උපකරණ පුවරුව</small>
         </span>
       </a>
 
-      <nav class="main-nav" aria-label="Main navigation">
-        <button class="nav-btn is-active" data-nav="dashboard" aria-current="page">Dashboard</button>
-        <button class="nav-btn" data-nav="map">Map</button>
-        <button class="nav-btn" data-nav="cities">Cities</button>
-        <button class="nav-btn" data-nav="about">About &amp; Sources</button>
+      <nav class="main-nav" aria-label="ප්‍රධාන සංචාලනය">
+        <button class="nav-btn is-active" data-nav="dashboard" aria-current="page">මුල් පිටුව</button>
+        <button class="nav-btn" data-nav="map">සිතියම</button>
+        <button class="nav-btn" data-nav="cities">නගර</button>
+        <button class="nav-btn" data-nav="about">තොරතුරු</button>
       </nav>
 
       <div class="header-actions">
-        <label class="unit-toggle" aria-label="Temperature unit">
-          <button id="btn-c" class="unit-btn is-active" type="button">°C</button>
-          <button id="btn-f" class="unit-btn" type="button">°F</button>
-        </label>
-        <button id="btn-refresh" class="icon-btn" type="button" title="Refresh" aria-label="Refresh weather data">↻</button>
+        <div class="unit-toggle" role="group" aria-label="උෂ්ණත්ව ඒකකය">
+          <button id="btn-c" class="unit-btn is-active" type="button" aria-label="සෙල්සියස් පෙන්වන්න">°C</button>
+          <button id="btn-f" class="unit-btn" type="button" aria-label="ෆැරන්හයිට් පෙන්වන්න">°F</button>
+        </div>
+        <button id="btn-refresh" class="icon-btn" type="button" title="නැවත ලබාගන්න" aria-label="කාලගුණ දත්ත නැවත ලබාගන්න">↻</button>
       </div>
     </div>
   </header>
 
   <main id="main">
-    <!-- Search -->
-    <section class="search-panel" aria-label="Search location">
+    <!-- සෙවීම -->
+    <section class="search-panel" aria-label="ස්ථානය සොයන්න">
       <div class="search-inner container">
-        <h1 class="visually-hidden">Search a location in Sri Lanka</h1>
+        <h1 class="visually-hidden">ශ්‍රී ලංකාවේ ස්ථානයක් සොයන්න</h1>
         <form id="search-form" class="search-form" role="search" autocomplete="off">
           <div class="search-box">
             <span class="search-icon" aria-hidden="true">🔍</span>
-            <input id="search-input" type="search" placeholder="Search a city in Sri Lanka… (e.g. Colombo, Kandy, Jaffna)" aria-label="Search a city in Sri Lanka" />
-            <button id="btn-locate" class="locate-btn" type="button" title="Use my location" aria-label="Use my location">📍</button>
+            <input id="search-input" type="search" placeholder="ශ්‍රී ලංකාවේ නගරයක් සොයන්න… (උදා: මුලතිව්, කොළඹ)" aria-label="ශ්‍රී ලංකාවේ නගරයක් සොයන්න" />
+            <button id="btn-locate" class="locate-btn" type="button" title="මගේ ස්ථානය භාවිතා කරන්න" aria-label="මගේ ස්ථානය භාවිතා කරන්න">📍</button>
           </div>
-          <ul id="search-results" class="search-results" role="listbox" aria-label="Search results" hidden></ul>
+          <ul id="search-results" class="search-results" role="listbox" aria-label="සෙවුම් ප්‍රතිඵල" hidden></ul>
         </form>
-        <div class="quick-cities" id="quick-cities" aria-label="Popular cities"></div>
+        <div class="quick-cities" id="quick-cities" aria-label="ජනප්‍රිය නගර"></div>
       </div>
     </section>
 
-    <!-- DASHBOARD VIEW -->
-    <section id="view-dashboard" class="view is-active container" aria-label="Weather dashboard">
+    <!-- උපකරණ පුවරුව -->
+    <section id="view-dashboard" class="view is-active container" aria-label="කාලගුණ උපකරණ පුවරුව">
       <div id="statusbar" class="statusbar" role="status" aria-live="polite">
-        <span id="status-text">Loading weather…</span>
+        <span id="status-text">කාලගුණ දත්ත පූරණය වෙමින්…</span>
         <span class="status-spacer"></span>
         <span id="updated-at" class="updated"></span>
       </div>
 
       <div id="error-banner" class="error-banner" hidden>
-        <strong>Could not load weather.</strong>
-        <span id="error-message">Check your connection and try again.</span>
-        <button id="btn-retry" type="button">Retry</button>
+        <strong>කාලගුණය පූරණය කළ නොහැක.</strong>
+        <span id="error-message">සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.</span>
+        <button id="btn-retry" type="button">නැවත උත්සාහ කරන්න</button>
       </div>
 
       <div class="dashboard-grid">
-        <!-- Today / current -->
-        <article class="card current-card" aria-label="Current weather">
+        <!-- දැනට -->
+        <article class="card current-card" aria-label="දැනට කාලගුණය">
+          <div id="current-loading" class="card-loading" hidden>
+            <span class="spinner" aria-hidden="true"></span>
+            <span>කාලගුණය පූරණය වෙමින්…</span>
+          </div>
+
           <div class="current-top">
             <div>
-              <p class="location-line"><span id="current-city" class="location-name">Colombo</span> <span id="current-region" class="location-region"></span></p>
+              <p class="location-line"><span id="current-city" class="location-name">මුලතිව්</span> <span id="current-region" class="location-region"></span></p>
               <p id="current-date" class="muted small"></p>
             </div>
-            <button id="btn-favourite" class="fav-btn" type="button" aria-pressed="false" title="Add to favourites">☆ Favourite</button>
+            <button id="btn-favourite" class="fav-btn" type="button" aria-pressed="false" title="ප්‍රියතම නගරවලට එක් කරන්න">☆ ප්‍රියතම</button>
           </div>
 
           <div class="current-main">
             <div class="temp-wrap">
               <span id="current-temp" class="temp-big">--°</span>
-              <span id="current-condition" class="condition">Loading…</span>
+              <span id="current-condition" class="condition">පූරණය වෙමින්…</span>
               <span id="current-feels" class="muted small"></span>
             </div>
             <div id="current-icon" class="weather-icon" aria-hidden="true">—</div>
@@ -99,42 +113,43 @@
           <div class="current-desc" id="current-desc"></div>
 
           <div class="meta-grid" id="meta-grid">
-            <div class="meta"><span class="meta-label">Humidity</span><strong id="m-humidity">—</strong></div>
-            <div class="meta"><span class="meta-label">Wind</span><strong id="m-wind">—</strong></div>
-            <div class="meta"><span class="meta-label">Pressure</span><strong id="m-pressure">—</strong></div>
-            <div class="meta"><span class="meta-label">UV Index</span><strong id="m-uv">—</strong></div>
-            <div class="meta"><span class="meta-label">Precipitation</span><strong id="m-precip">—</strong></div>
-            <div class="meta"><span class="meta-label">Visibility</span><strong id="m-visibility">—</strong></div>
-            <div class="meta"><span class="meta-label">Sunrise</span><strong id="m-sunrise">—</strong></div>
-            <div class="meta"><span class="meta-label">Sunset</span><strong id="m-sunset">—</strong></div>
-            <div class="meta"><span class="meta-label">Dew point</span><strong id="m-dew">—</strong></div>
-            <div class="meta"><span class="meta-label">Cloud cover</span><strong id="m-cloud">—</strong></div>
-            <div class="meta"><span class="meta-label">Rain chance</span><strong id="m-rain-chance">—</strong></div>
-            <div class="meta"><span class="meta-label">Wind gusts</span><strong id="m-gusts">—</strong></div>
+            <div class="meta"><span class="meta-label">ආර්ද්‍රතාවය</span><strong id="m-humidity">—</strong></div>
+            <div class="meta"><span class="meta-label">සුළං</span><strong id="m-wind">—</strong></div>
+            <div class="meta"><span class="meta-label">පීඩනය</span><strong id="m-pressure">—</strong></div>
+            <div class="meta"><span class="meta-label">UV දර්ශකය</span><strong id="m-uv">—</strong></div>
+            <div class="meta"><span class="meta-label">වර්ෂාපතනය</span><strong id="m-precip">—</strong></div>
+            <div class="meta"><span class="meta-label">දෘශ්‍යතාව</span><strong id="m-visibility">—</strong></div>
+            <div class="meta"><span class="meta-label">හිරු උදාව</span><strong id="m-sunrise">—</strong></div>
+            <div class="meta"><span class="meta-label">හිරු බැසීම</span><strong id="m-sunset">—</strong></div>
+            <div class="meta"><span class="meta-label">තුෂාරාංකය</span><strong id="m-dew">—</strong></div>
+            <div class="meta"><span class="meta-label">වළාකුළු ආවරණය</span><strong id="m-cloud">—</strong></div>
+            <div class="meta"><span class="meta-label">වැසි සම්භාවිතාව</span><strong id="m-rain-chance">—</strong></div>
+            <div class="meta"><span class="meta-label">සුළං පහරවල්</span><strong id="m-gusts">—</strong></div>
           </div>
         </article>
 
-        <!-- Hourly -->
-        <article class="card" aria-label="Hourly forecast">
+        <!-- පැයක අනාවැකිය -->
+        <article class="card" aria-label="පැයක අනාවැකිය">
           <div class="card-head">
-            <h2>Hourly forecast <span class="muted small">(next 24 hours)</span></h2>
+            <h2>පැයක අනාවැකිය <span class="muted small">(ඉදිරි පැය 24)</span></h2>
+            <span class="swipe-hint muted small">ස්වයිප් කරන්න →</span>
           </div>
-          <canvas id="hourly-chart" height="180" aria-label="Temperature chart for next 24 hours" role="img"></canvas>
-          <div id="hourly-strip" class="hourly-strip" aria-label="Hourly details"></div>
+          <canvas id="hourly-chart" height="180" aria-label="ඉදිරි පැය 24 සඳහා උෂ්ණත්ව ප්‍රස්තාරය" role="img"></canvas>
+          <div id="hourly-strip" class="hourly-strip" aria-label="පැයක විස්තර"></div>
         </article>
 
-        <!-- 7-day -->
-        <article class="card" aria-label="7-day forecast">
+        <!-- දින 7 -->
+        <article class="card" aria-label="දින 7 අනාවැකිය">
           <div class="card-head">
-            <h2>7-day forecast</h2>
+            <h2>දින 7 අනාවැකිය</h2>
           </div>
           <div id="daily-list" class="daily-list"></div>
         </article>
 
-        <!-- Air quality -->
-        <article class="card" aria-label="Air quality">
+        <!-- වායු ගුණාත්මකභාවය -->
+        <article class="card" aria-label="වායු ගුණාත්මකභාවය">
           <div class="card-head">
-            <h2>Air quality</h2>
+            <h2>වායු ගුණාත්මකභාවය</h2>
             <span id="aqi-badge" class="badge">—</span>
           </div>
           <div class="aqi-grid">
@@ -143,110 +158,126 @@
             <div class="meta"><span class="meta-label">PM10</span><strong id="aqi-pm10">—</strong></div>
             <div class="meta"><span class="meta-label">O₃</span><strong id="aqi-o3">—</strong></div>
             <div class="meta"><span class="meta-label">NO₂</span><strong id="aqi-no2">—</strong></div>
-            <div class="meta"><span class="meta-label">Dust</span><strong id="aqi-dust">—</strong></div>
+            <div class="meta"><span class="meta-label">දූවිලි</span><strong id="aqi-dust">—</strong></div>
           </div>
-          <p class="muted small">Source: Open-Meteo Air Quality (CAMS). Concentrations in µg/m³.</p>
+          <p class="muted small">මූලාශ්‍රය: Open-Meteo Air Quality (CAMS). සාන්ද්‍රණ µg/m³ වලින්.</p>
         </article>
 
-        <!-- Marine -->
-        <article class="card" aria-label="Marine conditions">
+        <!-- මුහුදු -->
+        <article class="card" aria-label="මුහුදු තත්ත්වය">
           <div class="card-head">
-            <h2>Marine / coast</h2>
+            <h2>මුහුදු / වෙරළ</h2>
             <span class="badge soft">Open-Meteo Marine</span>
           </div>
           <div class="aqi-grid">
-            <div class="meta"><span class="meta-label">Wave height</span><strong id="marine-wave">—</strong></div>
-            <div class="meta"><span class="meta-label">Wave period</span><strong id="marine-period">—</strong></div>
-            <div class="meta"><span class="meta-label">Swell height</span><strong id="marine-swell">—</strong></div>
-            <div class="meta"><span class="meta-label">Sea temp</span><strong id="marine-sst">—</strong></div>
+            <div class="meta"><span class="meta-label">රැලි උස</span><strong id="marine-wave">—</strong></div>
+            <div class="meta"><span class="meta-label">රැලි කාලය</span><strong id="marine-period">—</strong></div>
+            <div class="meta"><span class="meta-label">ඉදිමුම් උස</span><strong id="marine-swell">—</strong></div>
+            <div class="meta"><span class="meta-label">මුහුදු උෂ්ණත්වය</span><strong id="marine-sst">—</strong></div>
           </div>
-          <p class="muted small">Nearest coastal grid point. Useful for swimming, diving and fishing. Check official notices before going to sea.</p>
+          <p class="muted small">ළඟම වෙරළ ඛණ්ඩාංකය. මුහුදට බැසීමට පෙර නිල අනතුරු ඇඟවීම් පරීක්ෂා කරන්න.</p>
         </article>
 
-        <!-- Sri Lanka overview mini-map -->
-        <article class="card" aria-label="Sri Lanka at a glance">
+        <!-- එක බැල්මට -->
+        <article class="card" aria-label="එක බැල්මට ශ්‍රී ලංකාව">
           <div class="card-head">
-            <h2>Sri Lanka at a glance</h2>
-            <button class="text-btn" data-nav="map" type="button">Open full map →</button>
+            <h2>එක බැල්මට ශ්‍රී ලංකාව</h2>
+            <button class="text-btn" data-nav="map" type="button">සම්පූර්ණ සිතියම →</button>
           </div>
           <div id="overview-cities" class="overview-cities"></div>
         </article>
       </div>
     </section>
 
-    <!-- MAP VIEW -->
-    <section id="view-map" class="view container" aria-label="Weather map" hidden>
+    <!-- සිතියම -->
+    <section id="view-map" class="view container" aria-label="කාලගුණ සිතියම" hidden>
       <div class="card">
         <div class="card-head">
-          <h2>Map — Sri Lanka</h2>
-          <span class="muted small">Tap a city marker to load its forecast. Tiles: © OpenStreetMap contributors.</span>
+          <h2>සිතියම — ශ්‍රී ලංකාව</h2>
+          <span class="muted small">අනාවැකිය බැලීමට නගර සලකුණක් තට්ටු කරන්න. සිතියම: © OpenStreetMap දායකයින්.</span>
         </div>
-        <div id="leaflet-map" class="leaflet-map" aria-label="Interactive map of Sri Lanka"></div>
-        <p class="muted small">Tip: use the search bar above to find any town or village in Sri Lanka. Coordinates are resolved via Open-Meteo Geocoding.</p>
+        <div id="leaflet-map" class="leaflet-map" aria-label="ශ්‍රී ලංකාවේ අන්තර්ක්‍රියාකාරී සිතියම"></div>
+        <p class="muted small">ඉඟිය: ඉහළ සෙවුම් තීරුවෙන් ඕනෑම නගරයක් හෝ ගමක් සොයන්න. ඛණ්ඩාංක Open-Meteo Geocoding මගින් ලබාගනී.</p>
       </div>
     </section>
 
-    <!-- CITIES VIEW -->
-    <section id="view-cities" class="view container" aria-label="All cities" hidden>
+    <!-- නගර -->
+    <section id="view-cities" class="view container" aria-label="සියලු නගර" hidden>
       <div class="card">
         <div class="card-head">
-          <h2>Popular cities</h2>
-          <span class="muted small">Click a city to view its forecast</span>
+          <h2>ජනප්‍රිය නගර</h2>
+          <span class="muted small">අනාවැකිය බැලීමට නගරයක් තට්ටු කරන්න</span>
         </div>
         <div id="cities-grid" class="cities-grid"></div>
       </div>
 
       <div class="card" style="margin-top:16px">
         <div class="card-head">
-          <h2>Favourites</h2>
-          <button id="btn-clear-favs" class="text-btn" type="button">Clear all</button>
+          <h2>ප්‍රියතම නගර</h2>
+          <button id="btn-clear-favs" class="text-btn" type="button">සියල්ල ඉවත් කරන්න</button>
         </div>
         <div id="favourites-list" class="cities-grid"></div>
-        <p id="favourites-empty" class="muted small">No favourites yet. Open a city and tap “☆ Favourite” to pin it here. Saved on this device only.</p>
+        <p id="favourites-empty" class="muted small">තවම ප්‍රියතම නගර නැත. නගරයක් විවෘත කර “☆ ප්‍රියතම” තට්ටු කරන්න. මෙම උපාංගයේ පමණක් සුරකිනු ලැබේ.</p>
       </div>
     </section>
 
-    <!-- ABOUT VIEW -->
-    <section id="view-about" class="view container" aria-label="About and data sources" hidden>
+    <!-- තොරතුරු -->
+    <section id="view-about" class="view container" aria-label="තොරතුරු සහ දත්ත මූලාශ්‍ර" hidden>
       <div class="card">
-        <h2>About this dashboard</h2>
-        <p>A simple, fast weather dashboard for Sri Lanka. It shows current conditions, the next 24 hours, a 7-day outlook, air quality, marine conditions and an interactive map — with minimal navigation and no account needed.</p>
+        <h2>මෙම උපකරණ පුවරුව ගැන</h2>
+        <p><strong>SSS Sea Food Suppliers</strong> සඳහා නිර්මිත ශ්‍රී ලංකා කාලගුණ උපකරණ පුවරුවක්. දැනට තත්ත්වය, ඉදිරි පැය 24, දින 7 අනාවැකිය, වායු ගුණාත්මකභාවය, මුහුදු තත්ත්වය සහ අන්තර්ක්‍රියාකාරී සිතියමක් — ගිණුමක් නොමැතිව. ධීවර කටයුතු සහ මුහුදු ගමන් සඳහා මුහුදු තත්ත්ව දත්ත විශේෂයෙන් ප්‍රයෝජනවත්.</p>
 
-        <h3>How to use</h3>
+        <h3>භාවිතා කරන ආකාරය</h3>
         <ul class="plain-list">
-          <li><strong>Dashboard</strong> — current weather, hourly, 7-day, air quality and marine for the selected place.</li>
-          <li><strong>Map</strong> — tap a marker to switch location.</li>
-          <li><strong>Cities</strong> — browse major cities or your favourites.</li>
-          <li><strong>Search</strong> — type any Sri Lankan town/village. Use 📍 for your current location. Toggle °C / °F in the header.</li>
+          <li><strong>මුල් පිටුව</strong> — තෝරාගත් ස්ථානයේ දැනට කාලගුණය, පැයක අනාවැකිය, දින 7 අනාවැකිය, වායු ගුණාත්මකභාවය සහ මුහුදු තත්ත්වය.</li>
+          <li><strong>සිතියම</strong> — ස්ථානය මාරු කිරීමට සලකුණක් තට්ටු කරන්න.</li>
+          <li><strong>නගර</strong> — ප්‍රධාන නගර හෝ ඔබේ ප්‍රියතම නගර බලන්න.</li>
+          <li><strong>සෙවීම</strong> — ඕනෑම ශ්‍රී ලාංකික නගරයක් හෝ ගමක් ටයිප් කරන්න. 📍 මගින් ඔබේ වත්මන් ස්ථානය භාවිතා කරන්න. ඉහළින් °C / °F මාරු කරන්න.</li>
         </ul>
 
-        <h3>Data sources (accurate &amp; free)</h3>
+        <h3>දත්ත මූලාශ්‍ර (නිවැරදි සහ නොමිලේ)</h3>
         <ul class="plain-list sources">
-          <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo Forecast API</a> — current, hourly and daily weather. Data from ECMWF IFS, GFS, ICON and other numerical weather prediction models via Open-Meteo. Free, no API key, <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">CC-BY 4.0</a>.</li>
-          <li><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">Open-Meteo Geocoding API</a> — resolves Sri Lankan place names to latitude/longitude.</li>
-          <li><a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">Open-Meteo Air Quality API</a> — US AQI, PM2.5, PM10, O₃, NO₂ and dust from the Copernicus Atmosphere Monitoring Service (CAMS).</li>
-          <li><a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine Weather API</a> — wave height, period, swell and sea-surface temperature for coastal waters.</li>
-          <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">Department of Meteorology, Sri Lanka</a> — official weather warnings, monsoon / cyclone advisories and climatology. <strong>For official warnings and safety decisions, always check meteo.gov.lk.</strong></li>
-          <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> map tiles via Leaflet.</li>
+          <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo Forecast API</a> — දැනට, පැයක සහ දෛනික කාලගුණය. ECMWF IFS, GFS, ICON ඇතුළු අනාවැකි ආකෘතිවලින් Open-Meteo හරහා. නොමිලේ, API යතුරක් නොමැතිව, <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">CC-BY 4.0</a>.</li>
+          <li><a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">Open-Meteo Geocoding API</a> — ශ්‍රී ලාංකික ස්ථාන නාම අක්ෂාංශ/දේශාංශ බවට හරවයි.</li>
+          <li><a href="https://open-meteo.com/en/docs/air-quality-api" target="_blank" rel="noopener">Open-Meteo Air Quality API</a> — US AQI, PM2.5, PM10, O₃, NO₂ සහ දූවිලි, Copernicus Atmosphere Monitoring Service (CAMS) වෙතින්.</li>
+          <li><a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine Weather API</a> — රැලි උස, කාලය, ඉදිමුම් සහ මුහුදු ජල උෂ්ණත්වය.</li>
+          <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">ශ්‍රී ලංකා කාලගුණ විද්‍යා දෙපාර්තමේන්තුව</a> — නිල අනතුරු ඇඟවීම්, මෝසම් / චක්‍රවාත උපදෙස්. <strong>නිල අනතුරු ඇඟවීම් සහ ආරක්ෂාව සඳහා සැමවිටම meteo.gov.lk බලන්න.</strong></li>
+          <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> — Leaflet හරහා සිතියම්.</li>
         </ul>
 
-        <h3>Notes &amp; limitations</h3>
+        <h3>සටහන් සහ සීමාවන්</h3>
         <ul class="plain-list">
-          <li>Times are shown in local time (Asia/Colombo, UTC+5:30) as returned by the API’s timezone.</li>
-          <li>Marine data uses the nearest coastal grid cell — it may be offshore for inland cities; treat inland “marine” values as indicative only.</li>
-          <li>Forecasts are model outputs and can change. Check the Department of Meteorology for official alerts, especially during monsoon seasons (Yala: May–September, Maha: October–February).</li>
-          <li>This is a static web app. No signup, no tracking beyond standard GitHub Pages / CDN hosting. Favourites are stored in your browser (localStorage).</li>
+          <li>සියලු වේලාවන් ශ්‍රී ලංකා වේලාවෙන් (Asia/Colombo, UTC+5:30) පෙන්වයි.</li>
+          <li>මුහුදු දත්ත ළඟම වෙරළ ඛණ්ඩාංකයෙන් ලබාගනී — ගොඩබිම් නගර සඳහා එය ආසන්න අගයක් පමණි.</li>
+          <li>අනාවැකි ආකෘතිවල ප්‍රතිඵල වන අතර වෙනස් විය හැක. විශේෂයෙන් මෝසම් කාලවලදී (යල: මැයි–සැප්තැම්බර්, මහ: ඔක්තෝබර්–පෙබරවාරි) නිල අනතුරු ඇඟවීම් සඳහා කාලගුණ විද්‍යා දෙපාර්තමේන්තුව බලන්න.</li>
+          <li>මෙය ස්ථිතික වෙබ් යෙදුමකි. ලියාපදිංචියක් නැත. ප්‍රියතම නගර ඔබේ බ්‍රවුසරයේ (localStorage) පමණක් සුරකියි.</li>
         </ul>
       </div>
     </section>
 
     <footer class="site-footer container">
-      <p><strong>Sri Lanka Weather Dashboard</strong> · Data: Open-Meteo (ECMWF/GFS/ICON, CAMS, CMEMS) · Map: © OpenStreetMap contributors · Official warnings: <a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">meteo.gov.lk</a></p>
-      <p class="muted small">This site is a demo dashboard and does not replace official meteorological advice. Built as a simple static site — view source in the <a href="https://github.com/senesh2006/weather-dashboard" target="_blank" rel="noopener">GitHub repo</a>.</p>
+      <p><strong>SSS Sea Food Suppliers</strong> · ශ්‍රී ලංකා කාලගුණ උපකරණ පුවරුව · දත්ත: Open-Meteo (ECMWF/GFS/ICON, CAMS, CMEMS) · සිතියම: © OpenStreetMap දායකයින් · නිල අනතුරු ඇඟවීම්: <a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">meteo.gov.lk</a></p>
+      <p class="muted small">මෙය නිර්දේශනාත්මක යෙදුමක් මිස නිල කාලගුණ උපදෙස් නොවේ. සරල ස්ථිතික අඩවියක් ලෙස නිර්මාණය කර ඇත — මූලාශ්‍රය <a href="https://github.com/senesh2006/weather-dashboard" target="_blank" rel="noopener">GitHub</a> හි.</p>
     </footer>
   </main>
 
-  <noscript><div class="noscript">This dashboard needs JavaScript to load live weather data.</div></noscript>
+  <noscript><div class="noscript">මෙම උපකරණ පුවරුවට සජීවී කාලගුණ දත්ත පූරණය කිරීමට JavaScript අවශ්‍යයි.</div></noscript>
+
+  <!-- ජංගම පහළ තීරුව (කුඩා තිරවලදී පමණි) -->
+  <nav class="mobile-nav" aria-label="ජංගම සංචාලනය">
+    <button class="nav-btn is-active" data-nav="dashboard" aria-current="page" type="button">
+      <span class="nav-ico" aria-hidden="true">🌤️</span><span class="nav-label">මුල් පිටුව</span>
+    </button>
+    <button class="nav-btn" data-nav="map" type="button">
+      <span class="nav-ico" aria-hidden="true">🗺️</span><span class="nav-label">සිතියම</span>
+    </button>
+    <button class="nav-btn" data-nav="cities" type="button">
+      <span class="nav-ico" aria-hidden="true">🏙️</span><span class="nav-label">නගර</span>
+    </button>
+    <button class="nav-btn" data-nav="about" type="button">
+      <span class="nav-ico" aria-hidden="true">ℹ️</span><span class="nav-label">තොරතුරු</span>
+    </button>
+  </nav>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="app.js"></script>

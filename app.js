@@ -1,5 +1,5 @@
-// Simple, dependency-free (except Leaflet for map) weather app for Sri Lanka.
-// Sources: Open-Meteo Forecast / Geocoding / Air Quality / Marine APIs.
+// ශ්‍රී ලංකා කාලගුණ උපකරණ පුවරුව
+// දත්ත: Open-Meteo Forecast / Geocoding / Air Quality / Marine APIs
 'use strict';
 
 const API = {
@@ -9,33 +9,46 @@ const API = {
   marine: 'https://marine-api.open-meteo.com/v1/marine',
 };
 
-// Accurate lat/lon for Sri Lankan towns (sourced from OpenStreetMap / GeoNames approximations)
+// ප්‍රධාන නගර — ඛණ්ඩාංක Open-Meteo Geocoding / OpenStreetMap වෙතින්
 const CITIES = [
-  { name: 'Colombo',       lat: 6.9271,  lon: 79.8612,  region: 'Western' },
-  { name: 'Negombo',       lat: 7.2086,  lon: 79.8358,  region: 'Western' },
-  { name: 'Kandy',         lat: 7.2906,  lon: 80.6338,  region: 'Central' },
-  { name: 'Galle',         lat: 6.0535,  lon: 80.2210,  region: 'Southern' },
-  { name: 'Matara',        lat: 5.9544,  lon: 80.5550,  region: 'Southern' },
-  { name: 'Hambantota',    lat: 6.1244,  lon: 81.1185,  region: 'Southern' },
-  { name: 'Trincomalee',   lat: 8.5876,  lon: 81.2150,  region: 'Eastern' },
-  { name: 'Batticaloa',    lat: 7.7106,  lon: 81.6924,  region: 'Eastern' },
-  { name: 'Jaffna',        lat: 9.6615,  lon: 80.0255,  region: 'Northern' },
-  { name: 'Anuradhapura',  lat: 8.3114,  lon: 80.4037,  region: 'North Central' },
-  { name: 'Kurunegala',    lat: 7.4862,  lon: 80.5863,  region: 'North Western' },
-  { name: 'Nuwara Eliya',  lat: 6.9580,  lon: 80.7605,  region: 'Central' },
-  { name: 'Badulla',       lat: 6.9909,  lon: 81.0551,  region: 'Uva' },
-  { name: 'Ratnapura',     lat: 6.6822,  lon: 80.4000,  region: 'Sabaragamuwa' },
-  { name: 'Polonnaruwa',   lat: 7.9403,  lon: 81.0188,  region: 'North Central' },
-  { name: 'Vavuniya',      lat: 8.7514,  lon: 80.4971,  region: 'Northern' },
-  { name: 'Puttalam',      lat: 8.0606,  lon: 79.8153,  region: 'North Western' },
-  { name: 'Monaragala',    lat: 6.7100,  lon: 81.3486,  region: 'Uva' },
-  { name: 'Kegalle',       lat: 7.3297,  lon: 80.3461,  region: 'Sabaragamuwa' },
-  { name: 'Kalutara',      lat: 6.5854,  lon: 79.9607,  region: 'Western' },
-  { name: 'Chilaw',        lat: 7.5752,  lon: 79.7958,  region: 'North Western' },
-  { name: 'Ampara',        lat: 6.2851,  lon: 81.6747,  region: 'Eastern' },
-  { name: 'Mannar',        lat: 8.9810,  lon: 79.9050,  region: 'Northern' },
-  { name: 'Dambulla',      lat: 7.8739,  lon: 80.6511,  region: 'Central' },
+  { name: 'Mullaitivu',   si: 'මුලතිව්',          lat: 9.2680,  lon: 80.8150,  region: 'Northern' },
+  { name: 'Colombo',      si: 'කොළඹ',             lat: 6.9271,  lon: 79.8612,  region: 'Western' },
+  { name: 'Negombo',      si: 'මීගමුව',           lat: 7.2086,  lon: 79.8358,  region: 'Western' },
+  { name: 'Kandy',        si: 'මහනුවර',           lat: 7.2906,  lon: 80.6338,  region: 'Central' },
+  { name: 'Galle',        si: 'ගාල්ල',            lat: 6.0535,  lon: 80.2210,  region: 'Southern' },
+  { name: 'Matara',       si: 'මාතර',             lat: 5.9544,  lon: 80.5550,  region: 'Southern' },
+  { name: 'Hambantota',   si: 'හම්බන්තොට',        lat: 6.1244,  lon: 81.1185,  region: 'Southern' },
+  { name: 'Trincomalee',  si: 'ත්‍රිකුණාමලය',      lat: 8.5876,  lon: 81.2150,  region: 'Eastern' },
+  { name: 'Batticaloa',   si: 'මඩකලපුව',          lat: 7.7106,  lon: 81.6924,  region: 'Eastern' },
+  { name: 'Jaffna',       si: 'යාපනය',            lat: 9.6615,  lon: 80.0255,  region: 'Northern' },
+  { name: 'Anuradhapura', si: 'අනුරාධපුරය',       lat: 8.3114,  lon: 80.4037,  region: 'North Central' },
+  { name: 'Kurunegala',   si: 'කුරුණෑගල',         lat: 7.4862,  lon: 80.5863,  region: 'North Western' },
+  { name: 'Nuwara Eliya', si: 'නුවරඑළිය',         lat: 6.9580,  lon: 80.7605,  region: 'Central' },
+  { name: 'Badulla',      si: 'බදුල්ල',            lat: 6.9909,  lon: 81.0551,  region: 'Uva' },
+  { name: 'Ratnapura',    si: 'රත්නපුර',           lat: 6.6822,  lon: 80.4000,  region: 'Sabaragamuwa' },
+  { name: 'Polonnaruwa',  si: 'පොළොන්නරුව',        lat: 7.9403,  lon: 81.0188,  region: 'North Central' },
+  { name: 'Vavuniya',     si: 'වවුනියාව',          lat: 8.7514,  lon: 80.4971,  region: 'Northern' },
+  { name: 'Puttalam',     si: 'පුත්තලම',          lat: 8.0606,  lon: 79.8153,  region: 'North Western' },
+  { name: 'Monaragala',   si: 'මොණරාගල',          lat: 6.7100,  lon: 81.3486,  region: 'Uva' },
+  { name: 'Kegalle',      si: 'කෑගල්ල',           lat: 7.3297,  lon: 80.3461,  region: 'Sabaragamuwa' },
+  { name: 'Kalutara',     si: 'කළුතර',             lat: 6.5854,  lon: 79.9607,  region: 'Western' },
+  { name: 'Chilaw',       si: 'හලාවත',            lat: 7.5752,  lon: 79.7958,  region: 'North Western' },
+  { name: 'Ampara',       si: 'අම්පාර',            lat: 6.2851,  lon: 81.6747,  region: 'Eastern' },
+  { name: 'Mannar',       si: 'මන්නාරම',           lat: 8.9810,  lon: 79.9050,  region: 'Northern' },
+  { name: 'Dambulla',     si: 'දඹුල්ල',           lat: 7.8739,  lon: 80.6511,  region: 'Central' },
 ];
+
+const PROVINCE_SI = {
+  Western: 'බස්නාහිර', Central: 'මධ්‍යම', Southern: 'දකුණු', Eastern: 'නැගෙනහිර',
+  Northern: 'උතුරු', 'North Central': 'උතුරු මැද', 'North Western': 'වයඹ',
+  Uva: 'ඌව', Sabaragamuwa: 'සබරගමුව',
+};
+
+const WEEKDAYS = ['ඉරිදා', 'සඳුදා', 'අඟහරුවාදා', 'බදාදා', 'බ්‍රහස්පතින්දා', 'සිකුරාදා', 'සෙනසුරාදා'];
+const WEEKDAYS_SHORT = ['ඉරිදා', 'සඳුදා', 'අඟහ', 'බදාදා', 'බ්‍රහස්', 'සිකු', 'සෙන'];
+const MONTHS = ['ජනවාරි', 'පෙබරවාරි', 'මාර්තු', 'අප්‍රේල්', 'මැයි', 'ජූනි', 'ජූලි', 'අගෝස්තු', 'සැප්තැම්බර්', 'ඔක්තෝබර්', 'නොවැම්බර්', 'දෙසැම්බර්'];
+const MONTHS_SHORT = ['ජන', 'පෙබ', 'මාර්', 'අප්‍රේ', 'මැයි', 'ජූනි', 'ජූලි', 'අගෝ', 'සැප්', 'ඔක්', 'නොවැ', 'දෙසැ'];
+const DIRS_SI = ['උ', 'ඊසා', 'නැ', 'ගිකො', 'ද', 'නි', 'බ', 'වය'];
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -46,6 +59,8 @@ const els = {
   updated: $('updated-at'),
   errorBanner: $('error-banner'),
   errorMessage: $('error-message'),
+  loadbar: $('loadbar'),
+  cardLoading: $('current-loading'),
   city: $('current-city'),
   region: $('current-region'),
   date: $('current-date'),
@@ -66,8 +81,8 @@ const els = {
 };
 
 let state = {
-  unit: localStorage.getItem('lk-weather-unit') || 'c', // c | f
-  current: CITIES[0], // default Colombo
+  unit: localStorage.getItem('lk-weather-unit') || 'c',
+  current: CITIES[0],            // සාමාන්‍යයෙන් මුලතිව්
   forecast: null,
   airQuality: null,
   marine: null,
@@ -76,71 +91,112 @@ let state = {
   overviewData: {},
 };
 
+/* ---------- helpers ---------- */
+const pad = (n) => String(n).padStart(2, '0');
 const isF = () => state.unit === 'f';
-const tempUnit = () => (isF() ? 'fahrenheit' : 'celsius');
 const toTemp = (c) => (isF() ? (c * 9) / 5 + 32 : c);
 const fmtTemp = (c) => (c == null || Number.isNaN(c) ? '—' : `${Math.round(toTemp(c))}°${isF() ? 'F' : 'C'}`);
-const fmtSpeed = (kmh) => {
-  if (kmh == null) return '—';
-  return isF() ? `${Math.round(kmh * 0.621371)} mph` : `${Math.round(kmh)} km/h`;
-};
+const fmtSpeed = (kmh) => (kmh == null ? '—' : isF() ? `${Math.round(kmh * 0.621371)} mph` : `${Math.round(kmh)} km/h`);
+
+// API returns Asia/Colombo wall-clock strings WITHOUT an offset.
+// Parse them as wall-clock so the displayed time never shifts by the viewer's timezone.
+function isoParts(iso) {
+  const [datePart, timePart = '00:00'] = String(iso).split('T');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm] = timePart.split(':').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return { y, m, d, hh, mm, dow };
+}
+const clockOf = (iso) => { const p = isoParts(iso); return `${pad(p.hh)}:${pad(p.mm)}`; };
+const dateLine = (iso) => { const p = isoParts(iso); return `${WEEKDAYS[p.dow]}, ${p.d} ${MONTHS[p.m - 1]} ${p.y}`; };
+const dayMonth = (iso) => { const p = isoParts(iso); return `${WEEKDAYS[p.dow]}, ${p.d} ${MONTHS[p.m - 1]}`; };
+const shortDate = (iso) => { const p = isoParts(iso); return `${p.d} ${MONTHS[p.m - 1]}`; };
+const hourKey = (iso) => String(iso).slice(0, 13);
+
+const COLOMBO_OFFSET_MIN = 330; // UTC+5:30
+function colomboNow() {
+  const t = new Date(Date.now() + COLOMBO_OFFSET_MIN * 60000);
+  const y = t.getUTCFullYear(), m = t.getUTCMonth() + 1, d = t.getUTCDate();
+  const hh = t.getUTCHours(), mm = t.getUTCMinutes();
+  return {
+    key: `${y}-${pad(m)}-${pad(d)}T${pad(hh)}:${pad(mm)}`,
+    hour: `${y}-${pad(m)}-${pad(d)}T${pad(hh)}`,
+    stamp: `${pad(hh)}:${pad(mm)} · ${d} ${MONTHS_SHORT[m - 1]}`,
+    dow: t.getUTCDay(), y, m, d,
+  };
+}
+
+const nameOf = (p) => (p && (p.si || p.name)) || '';
+function provinceLabel(p) {
+  const raw = (p && (p.region || p.admin1)) || '';
+  if (/^sri lanka$/i.test(raw)) return 'ශ්‍රී ලංකාව';
+  const key = raw.replace(/ Province$/, '');
+  const si = PROVINCE_SI[key] || PROVINCE_SI[raw];
+  return si ? `${si} පළාත` : raw;
+}
+function sinhalizeName(name) {
+  const hit = CITIES.find((c) => c.name.toLowerCase() === String(name).toLowerCase());
+  if (hit) return hit.si;
+  if (/^mullaittivu$/i.test(name)) return 'මුලතිව්';
+  return '';
+}
 
 function setStatus(msg, updated) {
   els.statusText.textContent = msg;
-  if (updated) els.updated.textContent = updated;
+  if (updated !== undefined) els.updated.textContent = updated;
 }
 function showError(msg) {
-  els.errorMessage.textContent = msg || 'Check your connection and try again.';
+  els.errorMessage.textContent = msg || 'සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.';
   els.errorBanner.hidden = false;
 }
 function hideError() { els.errorBanner.hidden = true; }
 
-// WMO weather codes -> label + icon (WMO No. 4680)
+function setLoading(on) {
+  if (els.loadbar) els.loadbar.hidden = !on;
+  if (els.cardLoading) els.cardLoading.hidden = !on;
+  document.body.classList.toggle('is-loading', on);
+  const btn = $('btn-refresh');
+  if (btn) btn.disabled = on;
+}
+
+/* ---------- weather codes (WMO) ---------- */
 function wmo(code) {
   const map = {
-    0:  ['Clear sky', '☀️'],
-    1:  ['Mostly clear', '🌤️'],
-    2:  ['Partly cloudy', '⛅'],
-    3:  ['Overcast', '☁️'],
-    45: ['Fog', '🌫️'],
-    48: ['Rime fog', '🌫️'],
-    51: ['Light drizzle', '🌦️'],
-    53: ['Drizzle', '🌦️'],
-    55: ['Dense drizzle', '🌧️'],
-    56: ['Freezing drizzle', '🌧️'],
-    57: ['Freezing drizzle', '🌧️'],
-    61: ['Light rain', '🌧️'],
-    63: ['Rain', '🌧️'],
-    65: ['Heavy rain', '⛈️'],
-    66: ['Freezing rain', '🌧️'],
-    67: ['Freezing rain', '🌧️'],
-    71: ['Light snow', '🌨️'],
-    73: ['Snow', '🌨️'],
-    75: ['Heavy snow', '🌨️'],
-    77: ['Snow grains', '🌨️'],
-    80: ['Light showers', '🌦️'],
-    81: ['Rain showers', '🌧️'],
-    82: ['Violent showers', '⛈️'],
-    85: ['Snow showers', '🌨️'],
-    86: ['Snow showers', '🌨️'],
-    95: ['Thunderstorm', '⛈️'],
-    96: ['Thunderstorm with hail', '⛈️'],
-    99: ['Thunderstorm with hail', '⛈️'],
+    0:  ['පැහැදිලි අහස', '☀️'],
+    1:  ['බොහෝ දුරට පැහැදිලි', '🌤️'],
+    2:  ['අඩ වළාකුළු', '⛅'],
+    3:  ['වළාකුළු පිරි', '☁️'],
+    45: ['මීදුම', '🌫️'],
+    48: ['මීදුම', '🌫️'],
+    51: ['සැහැල්ලු ඉහිරෙන වැසි', '🌦️'],
+    53: ['ඉහිරෙන වැසි', '🌦️'],
+    55: ['තද ඉහිරෙන වැසි', '🌧️'],
+    56: ['හිම මිශ්‍ර ඉහිරෙන වැසි', '🌧️'],
+    57: ['හිම මිශ්‍ර ඉහිරෙන වැසි', '🌧️'],
+    61: ['සැහැල්ලු වැසි', '🌧️'],
+    63: ['වැසි', '🌧️'],
+    65: ['තද වැසි', '⛈️'],
+    66: ['හිම මිශ්‍ර වැසි', '🌧️'],
+    67: ['හිම මිශ්‍ර වැසි', '🌧️'],
+    71: ['සැහැල්ලු හිම', '🌨️'],
+    73: ['හිම', '🌨️'],
+    75: ['තද හිම', '🌨️'],
+    77: ['හිම කැටි', '🌨️'],
+    80: ['සැහැල්ලු වැසි වැටීම්', '🌦️'],
+    81: ['වැසි වැටීම්', '🌧️'],
+    82: ['දැඩි වැසි වැටීම්', '⛈️'],
+    85: ['හිම වැටීම්', '🌨️'],
+    86: ['හිම වැටීම්', '🌨️'],
+    95: ['ගිගුරුම් සහිත වැසි', '⛈️'],
+    96: ['ගිගුරුම් සහිත වැසි සහ අලිමංකඩ', '⛈️'],
+    99: ['ගිගුරුම් සහිත වැසි සහ අලිමංකඩ', '⛈️'],
   };
-  return map[code] || ['Unknown', '🌡️'];
+  return map[code] || ['නොදනී', '🌡️'];
 }
 
 function dirLabel(deg) {
   if (deg == null) return '';
-  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-  return dirs[Math.round(deg / 45) % 8];
-}
-
-function formatLocal(iso, opts = { hour: 'numeric', minute: '2-digit' }) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', ...opts });
-  } catch { return iso; }
+  return DIRS_SI[Math.round(deg / 45) % 8];
 }
 
 async function fetchJSON(url) {
@@ -149,22 +205,22 @@ async function fetchJSON(url) {
   return r.json();
 }
 
+/* ---------- API URLs ---------- */
 function forecastUrl(place) {
   const p = new URLSearchParams({
     latitude: String(place.lat),
     longitude: String(place.lon),
     current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
-    hourly: 'temperature_2m,precipitation_probability,precipitation,weather_code,uv_index,wind_speed_10m',
+    hourly: 'temperature_2m,precipitation_probability,precipitation,weather_code,uv_index,wind_speed_10m,dew_point_2m,visibility',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max',
     timezone: 'Asia/Colombo',
     forecast_days: '7',
-    temperature_unit: 'celsius', // keep API in C, convert client-side
+    temperature_unit: 'celsius',
     wind_speed_unit: 'kmh',
     precipitation_unit: 'mm',
   });
   return `${API.forecast}?${p.toString()}`;
 }
-
 function airQualityUrl(place) {
   const p = new URLSearchParams({
     latitude: String(place.lat),
@@ -176,7 +232,6 @@ function airQualityUrl(place) {
   });
   return `${API.airQuality}?${p.toString()}`;
 }
-
 function marineUrl(place) {
   const p = new URLSearchParams({
     latitude: String(place.lat),
@@ -189,13 +244,18 @@ function marineUrl(place) {
   return `${API.marine}?${p.toString()}`;
 }
 
+/* ---------- load ---------- */
 async function loadWeather(place, { silent = false } = {}) {
   state.current = place;
   hideError();
-  if (!silent) setStatus(`Loading weather for ${place.name}…`);
-  els.city.textContent = place.name;
-  els.region.textContent = place.region ? `· ${place.region} Province` : (place.admin1 ? `· ${place.admin1}` : '');
-  document.title = `${place.name} Weather — Sri Lanka Weather Dashboard`;
+  const started = Date.now();
+  if (!silent) {
+    setLoading(true);
+    setStatus('කාලගුණය පූරණය වෙමින්…', '');
+  }
+  els.city.textContent = nameOf(place);
+  els.region.textContent = place.region || place.admin1 ? `· ${provinceLabel(place)}` : '';
+  document.title = `${nameOf(place)} කාලගුණය — SSS Sea Food Suppliers`;
   updateFavButton();
   markActiveChips();
 
@@ -215,18 +275,24 @@ async function loadWeather(place, { silent = false } = {}) {
     renderDaily();
     renderAirQuality();
     renderMarine();
-    renderOverview(); // refresh overview highlight
 
-    const nowColombo = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Colombo', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    setStatus(`Showing data for ${place.name} · Source: Open-Meteo`, `Updated ${nowColombo} (Asia/Colombo)`);
+    const now = colomboNow();
+    setStatus(`${nameOf(place)} · දත්ත: Open-Meteo`, `යාවත්කාලීන: ${now.stamp}`);
     localStorage.setItem('lk-weather-last-place', JSON.stringify(place));
   } catch (e) {
     console.error(e);
-    setStatus(`Could not load ${place.name}.`);
-    showError('Network or API error. Please check your connection and try again.');
+    setStatus(`${nameOf(place)} සඳහා දත්ත ලබාගත නොහැක.`);
+    showError('ජාල දෝෂයකි. අන්තර්ජාල සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.');
+  } finally {
+    if (!silent) {
+      const wait = 320 - (Date.now() - started);
+      if (wait > 0) await new Promise((res) => setTimeout(res, wait));
+      setLoading(false);
+    }
   }
 }
 
+/* ---------- render: current ---------- */
 function renderCurrent() {
   const d = state.forecast;
   if (!d || !d.current) return;
@@ -235,36 +301,34 @@ function renderCurrent() {
   const isDay = c.is_day === 1;
   els.temp.textContent = fmtTemp(c.temperature_2m);
   els.condition.textContent = label;
-  els.feels.textContent = `Feels like ${fmtTemp(c.apparent_temperature)} · ${isDay ? 'Daytime' : 'Night'}`;
+  els.feels.textContent = `දැනෙන උෂ්ණත්වය ${fmtTemp(c.apparent_temperature)} · ${isDay ? 'දිවා කාලය' : 'රාත්‍රිය'}`;
   els.icon.textContent = isDay ? icon : (c.weather_code === 0 ? '🌙' : icon);
-  els.date.textContent = new Date(c.time).toLocaleString('en-GB', { timeZone: 'Asia/Colombo', weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' (Asia/Colombo)';
+  els.date.textContent = `${dayMonth(c.time)} · ${clockOf(c.time)} (ශ්‍රී ලංකා වේලාවෙන්)`;
 
-  // Daily today for sunrise/sunset/uv/precip
   const today = d.daily && d.daily.time ? 0 : -1;
   const sunrise = today >= 0 ? d.daily.sunrise[today] : null;
   const sunset = today >= 0 ? d.daily.sunset[today] : null;
   const uvMax = today >= 0 ? d.daily.uv_index_max[today] : null;
 
-  // Hourly now for visibility/dew/rain chance (nearest hour)
   let dew = null, vis = null, rainChance = null;
   if (d.hourly && d.hourly.time) {
-    const target = new Date(c.time).getTime();
-    let best = 0, bestDiff = Infinity;
-    d.hourly.time.forEach((t, i) => {
-      const diff = Math.abs(new Date(t).getTime() - target);
-      if (diff < bestDiff) { bestDiff = diff; best = i; }
-    });
+    const key = hourKey(c.time);
+    let best = d.hourly.time.findIndex((t) => hourKey(t) === key);
+    if (best < 0) best = d.hourly.time.findIndex((t) => t >= c.time);
+    if (best < 0) best = d.hourly.time.length - 1;
     rainChance = d.hourly.precipitation_probability ? d.hourly.precipitation_probability[best] : null;
+    dew = d.hourly.dew_point_2m ? d.hourly.dew_point_2m[best] : null;
+    vis = d.hourly.visibility ? d.hourly.visibility[best] : null;
   }
 
   $('m-humidity').textContent = c.relative_humidity_2m != null ? `${c.relative_humidity_2m}%` : '—';
   $('m-wind').textContent = c.wind_speed_10m != null ? `${fmtSpeed(c.wind_speed_10m)} ${dirLabel(c.wind_direction_10m)}` : '—';
   $('m-pressure').textContent = c.pressure_msl != null ? `${Math.round(c.pressure_msl)} hPa` : '—';
-  $('m-uv').textContent = uvMax != null ? `${Math.round(uvMax)} (max today)` : '—';
+  $('m-uv').textContent = uvMax != null ? `${Math.round(uvMax)} (අද උපරිම)` : '—';
   $('m-precip').textContent = c.precipitation != null ? `${c.precipitation} mm` : '—';
   $('m-visibility').textContent = vis != null ? `${(vis / 1000).toFixed(1)} km` : '—';
-  $('m-sunrise').textContent = sunrise ? formatLocal(sunrise) : '—';
-  $('m-sunset').textContent = sunset ? formatLocal(sunset) : '—';
+  $('m-sunrise').textContent = sunrise ? clockOf(sunrise) : '—';
+  $('m-sunset').textContent = sunset ? clockOf(sunset) : '—';
   $('m-dew').textContent = dew != null ? fmtTemp(dew) : '—';
   $('m-cloud').textContent = c.cloud_cover != null ? `${c.cloud_cover}%` : '—';
   $('m-rain-chance').textContent = rainChance != null ? `${rainChance}%` : '—';
@@ -275,40 +339,37 @@ function renderCurrent() {
 
 function describeCurrent(c, rainChance) {
   const bits = [];
-  if (rainChance != null && rainChance >= 40) bits.push(`Rain chance ${rainChance}% today`);
-  if (c.cloud_cover >= 80) bits.push('Cloudy skies');
-  else if (c.cloud_cover <= 20) bits.push('Mostly clear skies');
-  if (c.wind_speed_10m >= 35) bits.push('Windy conditions');
-  if (c.relative_humidity_2m >= 85) bits.push('Very humid');
-  if (!bits.length) return 'Conditions look settled. Check the hourly chart for the next 24 hours.';
+  if (rainChance != null && rainChance >= 40) bits.push(`අද වැසි සම්භාවිතාව ${rainChance}%`);
+  if (c.cloud_cover >= 80) bits.push('වළාකුළු සහිත අහස');
+  else if (c.cloud_cover <= 20) bits.push('බොහෝ දුරට පැහැදිලි අහස');
+  if (c.wind_speed_10m >= 35) bits.push('සුළං සහිත තත්ත්වය');
+  if (c.relative_humidity_2m >= 85) bits.push('ඉතා ආර්ද්‍රතාවය');
+  if (!bits.length) return 'තත්ත්වය සාමාන්‍යයි. ඉදිරි පැය 24 සඳහා පැයක ප්‍රස්තාරය බලන්න.';
   return bits.join('. ') + '.';
 }
 
+/* ---------- render: hourly ---------- */
 function renderHourly() {
   const h = state.forecast && state.forecast.hourly;
   els.hourlyStrip.innerHTML = '';
   if (!h || !h.time) return;
 
-  // Next 24 hours from now (Asia/Colombo approximated by API times)
-  const now = new Date();
-  let startIdx = 0;
-  for (let i = 0; i < h.time.length; i++) {
-    if (new Date(h.time[i]) >= now) { startIdx = i; break; }
-    startIdx = i;
-  }
+  const now = colomboNow();
+  let startIdx = h.time.findIndex((t) => t >= now.key);
+  if (startIdx < 0) startIdx = 0;
+
   const slice = [];
   for (let i = startIdx; i < Math.min(startIdx + 24, h.time.length); i++) slice.push(i);
 
-  // Chart
   drawHourlyChart(slice.map((i) => h.temperature_2m[i]), slice.map((i) => h.time[i]));
 
-  // Strip
-  slice.forEach((i) => {
+  slice.forEach((i, n) => {
     const [label, icon] = wmo(h.weather_code[i]);
+    const isNow = n === 0 && hourKey(h.time[i]) === now.hour;
     const div = document.createElement('div');
     div.className = 'hour-box';
     div.innerHTML = `
-      <div class="muted small">${formatLocal(h.time[i])}</div>
+      <div class="muted small">${isNow ? 'දැන්' : clockOf(h.time[i])}</div>
       <div class="h-ico" title="${label}">${icon}</div>
       <div class="h-temp">${fmtTemp(h.temperature_2m[i])}</div>
       <div class="muted small">${h.precipitation_probability && h.precipitation_probability[i] != null ? `💧${h.precipitation_probability[i]}%` : ''}</div>
@@ -319,6 +380,7 @@ function renderHourly() {
 
 function drawHourlyChart(temps, times) {
   const canvas = els.hourlyChart;
+  if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const cssW = canvas.clientWidth || canvas.parentElement.clientWidth || 600;
   const cssH = 180;
@@ -333,8 +395,8 @@ function drawHourlyChart(temps, times) {
   if (!vals.length) return;
   const min = Math.min(...vals), max = Math.max(...vals);
   const range = Math.max(1, max - min);
-  const pad = Math.max(1.5, range * 0.25);
-  const lo = min - pad, hi = max + pad;
+  const padY = Math.max(1.5, range * 0.25);
+  const lo = min - padY, hi = max + padY;
 
   const padLeft = 40, padRight = 14, padTop = 22, padBottom = 30;
   const plotW = Math.max(100, cssW - padLeft - padRight);
@@ -343,10 +405,9 @@ function drawHourlyChart(temps, times) {
   const xFor = (i) => padLeft + i * xStep;
   const yFor = (v) => padTop + plotH * (1 - (v - lo) / (hi - lo));
 
-  // Grid + Y labels (right-aligned in left gutter so they never overlap data)
   ctx.strokeStyle = '#e2e8f0';
   ctx.fillStyle = '#5b6b7d';
-  ctx.font = '11px system-ui';
+  ctx.font = '11px "Noto Sans Sinhala", system-ui';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for (let g = 0; g <= 2; g++) {
@@ -356,7 +417,6 @@ function drawHourlyChart(temps, times) {
     ctx.fillText(`${Math.round(t)}°`, padLeft - 8, y);
   }
 
-  // Line
   ctx.strokeStyle = '#0e6ea8';
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
@@ -367,26 +427,26 @@ function drawHourlyChart(temps, times) {
   });
   ctx.stroke();
 
-  // Dots + centered labels (temp above dot, time below plot) — clamped to canvas
   const labelEvery = cssW < 480 ? 6 : 3;
   vals.forEach((v, i) => {
     const x = xFor(i), y = yFor(v);
     ctx.fillStyle = '#0b3d5c';
     ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
     if (i % labelEvery === 0 || i === vals.length - 1) {
-      const cx = Math.min(Math.max(x, padLeft + 14), padLeft + plotW - 14);
+      const cx = Math.min(Math.max(x, padLeft + 16), padLeft + plotW - 16);
       ctx.textAlign = 'center';
       ctx.fillStyle = '#0f2436';
-      ctx.font = 'bold 11px system-ui';
+      ctx.font = 'bold 11px "Noto Sans Sinhala", system-ui';
       ctx.fillText(`${Math.round(v)}°`, cx, Math.max(11, y - 10));
       ctx.fillStyle = '#5b6b7d';
-      ctx.font = '11px system-ui';
-      ctx.fillText(formatLocal(times[i]), cx, cssH - 10);
+      ctx.font = '11px "Noto Sans Sinhala", system-ui';
+      ctx.fillText(clockOf(times[i]), cx, cssH - 10);
     }
   });
   ctx.textAlign = 'left';
 }
 
+/* ---------- render: daily ---------- */
 function renderDaily() {
   const d = state.forecast && state.forecast.daily;
   els.daily.innerHTML = '';
@@ -396,17 +456,16 @@ function renderDaily() {
   const gmin = Math.min(...allMin), gmax = Math.max(...allMax);
 
   d.time.forEach((iso, i) => {
-    const dt = new Date(iso);
+    const p = isoParts(iso);
     const [label, icon] = wmo(d.weather_code[i]);
-    const isToday = i === 0;
-    const dayName = isToday ? 'Today' : dt.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'Asia/Colombo' });
+    const dayName = i === 0 ? 'අද' : WEEKDAYS_SHORT[p.dow];
     const lo = toTemp(d.temperature_2m_min[i]), hi = toTemp(d.temperature_2m_max[i]);
     const left = ((lo - gmin) / Math.max(1, gmax - gmin)) * 100;
     const width = Math.max(6, ((hi - lo) / Math.max(1, gmax - gmin)) * 100);
     const row = document.createElement('div');
     row.className = 'day-row';
     row.innerHTML = `
-      <div class="day-name">${dayName}<br><span class="muted small">${dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Colombo' })}</span></div>
+      <div class="day-name">${dayName}<br><span class="muted small">${shortDate(iso)}</span></div>
       <div style="font-size:24px" title="${label}">${icon}</div>
       <div><div class="temp-bar"><span style="left:${left}%;width:${width}%"></span></div></div>
       <div class="range">${Math.round(lo)}° – ${Math.round(hi)}°<br><span class="muted small">${d.precipitation_probability_max && d.precipitation_probability_max[i] != null ? `💧${d.precipitation_probability_max[i]}%` : ''} ${d.precipitation_sum && d.precipitation_sum[i] ? `· ${d.precipitation_sum[i]}mm` : ''}</span></div>
@@ -415,17 +474,13 @@ function renderDaily() {
   });
 }
 
+/* ---------- render: air quality ---------- */
 function renderAirQuality() {
   const aq = state.airQuality && state.airQuality.current;
   const us = aq ? aq.us_aqi : null;
   if (us == null) {
-    $('aqi-us').textContent = '—';
-    $('aqi-pm25').textContent = '—';
-    $('aqi-pm10').textContent = '—';
-    $('aqi-o3').textContent = '—';
-    $('aqi-no2').textContent = '—';
-    $('aqi-dust').textContent = '—';
-    els.aqiBadge.textContent = 'No data';
+    ['aqi-us', 'aqi-pm25', 'aqi-pm10', 'aqi-o3', 'aqi-no2', 'aqi-dust'].forEach((id) => { $(id).textContent = '—'; });
+    els.aqiBadge.textContent = 'දත්ත නැත';
     els.aqiBadge.style.background = '#64748b';
     return;
   }
@@ -436,22 +491,20 @@ function renderAirQuality() {
   $('aqi-no2').textContent = aq.nitrogen_dioxide != null ? Math.round(aq.nitrogen_dioxide) : '—';
   $('aqi-dust').textContent = aq.dust != null ? Math.round(aq.dust) : '—';
 
-  let label = 'Good', color = '#16a34a';
-  if (us > 200) { label = 'Very unhealthy'; color = '#7e22ce'; }
-  else if (us > 150) { label = 'Unhealthy'; color = '#dc2626'; }
-  else if (us > 100) { label = 'Unhealthy for sensitive'; color = '#d97706'; }
-  else if (us > 50) { label = 'Moderate'; color = '#ca8a04'; }
+  let label = 'හොඳයි', color = '#16a34a';
+  if (us > 200) { label = 'ඉතා අහිතකර'; color = '#7e22ce'; }
+  else if (us > 150) { label = 'අහිතකර'; color = '#dc2626'; }
+  else if (us > 100) { label = 'සංවේදීන්ට අහිතකර'; color = '#d97706'; }
+  else if (us > 50) { label = 'මධ්‍යම'; color = '#ca8a04'; }
   els.aqiBadge.textContent = `${label} · ${Math.round(us)}`;
   els.aqiBadge.style.background = color;
 }
 
+/* ---------- render: marine ---------- */
 function renderMarine() {
   const m = state.marine;
   if (!m || !m.current) {
-    $('marine-wave').textContent = '—';
-    $('marine-period').textContent = '—';
-    $('marine-swell').textContent = '—';
-    $('marine-sst').textContent = '—';
+    ['marine-wave', 'marine-period', 'marine-swell', 'marine-sst'].forEach((id) => { $(id).textContent = '—'; });
     return;
   }
   const c = m.current;
@@ -460,15 +513,15 @@ function renderMarine() {
   $('marine-swell').textContent = c.swell_wave_height != null ? `${c.swell_wave_height.toFixed(2)} m` : '—';
   let sst = null;
   if (m.hourly && m.hourly.sea_surface_temperature && m.hourly.time) {
-    const now = new Date().getTime();
-    let best = 0, bestDiff = Infinity;
-    m.hourly.time.forEach((t, i) => { const d = Math.abs(new Date(t).getTime() - now); if (d < bestDiff) { bestDiff = d; best = i; } });
-    sst = m.hourly.sea_surface_temperature[best];
+    const key = colomboNow().hour;
+    let idx = m.hourly.time.findIndex((t) => hourKey(t) === key);
+    if (idx < 0) idx = m.hourly.time.length - 1;
+    sst = m.hourly.sea_surface_temperature[idx];
   }
   $('marine-sst').textContent = sst != null ? fmtTemp(sst) : '—';
 }
 
-// ---- Navigation ----
+/* ---------- navigation ---------- */
 function showView(name) {
   document.querySelectorAll('.view').forEach((v) => { v.hidden = true; v.classList.remove('is-active'); });
   const target = document.querySelector(`#view-${name}`);
@@ -477,19 +530,22 @@ function showView(name) {
     b.classList.toggle('is-active', b.dataset.nav === name);
     if (b.dataset.nav === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
-  if (name === 'map') initMap();
+  if (name === 'map') {
+    initMap();
+    requestAnimationFrame(() => state.map && state.map.invalidateSize());
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 document.querySelectorAll('.nav-btn, [data-nav]').forEach((el) => {
   if (el.dataset.nav) el.addEventListener('click', (e) => { e.preventDefault(); showView(el.dataset.nav); });
 });
 
-// ---- Quick cities / chips ----
+/* ---------- quick chips ---------- */
 function renderQuickCities() {
   els.quick.innerHTML = '';
   CITIES.slice(0, 10).forEach((c) => {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip'; b.textContent = c.name; b.dataset.name = c.name;
+    b.type = 'button'; b.className = 'chip'; b.textContent = c.si; b.dataset.name = c.name;
     b.addEventListener('click', () => { loadWeather({ ...c }); showView('dashboard'); });
     els.quick.appendChild(b);
   });
@@ -501,66 +557,58 @@ function markActiveChips() {
   });
 }
 
-// ---- Cities grid + overview ----
+/* ---------- cities grid ---------- */
 function renderCitiesGrid() {
   els.citiesGrid.innerHTML = '';
   CITIES.forEach((c) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'city-card';
     const cached = state.overviewData[c.name];
-    b.innerHTML = `<span class="name">${c.name}</span><div class="muted small">${c.region}</div><div class="temp">${cached ? fmtTemp(cached.temp) : '--°'}</div><div class="cond">${cached ? wmo(cached.code)[0] : 'Tap to load'}</div>`;
+    b.innerHTML = `<span class="name">${c.si}</span><div class="muted small">${provinceLabel(c)}</div><div class="temp">${cached ? fmtTemp(cached.temp) : '--°'}</div><div class="cond">${cached ? wmo(cached.code)[0] : 'තට්ටු කරන්න'}</div>`;
     b.addEventListener('click', () => { loadWeather({ ...c }); showView('dashboard'); });
     els.citiesGrid.appendChild(b);
   });
 }
 
 async function loadOverview() {
-  // Fetch current temps for a subset to populate cards (best-effort)
   const subset = CITIES.slice(0, 16);
   els.overview.innerHTML = '';
   subset.forEach((c) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'mini';
-    b.innerHTML = `<strong>${c.name}</strong><span class="temp">--°</span><br><span class="muted small">loading…</span>`;
+    b.innerHTML = `<strong>${c.si}</strong><span class="temp">--°</span><br><span class="muted small">පූරණය වෙමින්…</span>`;
     b.addEventListener('click', () => { loadWeather({ ...c }); showView('dashboard'); });
     b.dataset.city = c.name;
     els.overview.appendChild(b);
   });
 
-  // Batch with small concurrency to avoid hammering API
   async function one(place) {
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code&timezone=Asia%2FColombo&forecast_days=1`;
       const j = await fetchJSON(url);
-      if (j.current) {
-        state.overviewData[place.name] = { temp: j.current.temperature_2m, code: j.current.weather_code };
-        const el = els.overview.querySelector(`[data-city="${place.name}"]`);
-        if (el) {
-          const [label, icon] = wmo(j.current.weather_code);
-          el.innerHTML = `<strong>${place.name} ${icon}</strong><span class="temp">${fmtTemp(j.current.temperature_2m)}</span><br><span class="muted small">${label}</span>`;
-        }
-        // also patch cities grid card
-        const cards = [...els.citiesGrid.children];
-        const idx = CITIES.findIndex((x) => x.name === place.name);
-        if (cards[idx]) {
-          const [label] = wmo(j.current.weather_code);
-          cards[idx].innerHTML = `<span class="name">${place.name}</span><div class="muted small">${place.region}</div><div class="temp">${fmtTemp(j.current.temperature_2m)}</div><div class="cond">${label}</div>`;
-        }
+      if (!j.current) return;
+      state.overviewData[place.name] = { temp: j.current.temperature_2m, code: j.current.weather_code };
+      const [label, icon] = wmo(j.current.weather_code);
+      const el = els.overview.querySelector(`[data-city="${place.name}"]`);
+      if (el) {
+        el.innerHTML = `<strong>${place.si} ${icon}</strong><span class="temp">${fmtTemp(j.current.temperature_2m)}</span><br><span class="muted small">${label}</span>`;
       }
-    } catch { /* ignore */ }
+      const idx = CITIES.findIndex((x) => x.name === place.name);
+      const cards = [...els.citiesGrid.children];
+      if (cards[idx]) {
+        cards[idx].innerHTML = `<span class="name">${place.si}</span><div class="muted small">${provinceLabel(place)}</div><div class="temp">${fmtTemp(j.current.temperature_2m)}</div><div class="cond">${label}</div>`;
+      }
+    } catch { /* නොසලකන්න */ }
   }
-  // sequential to be gentle
   for (const c of subset) await one(c);
 }
 
-function renderOverview() { /* highlight current in overview */ }
-
-// ---- Favourites ----
+/* ---------- favourites ---------- */
 function updateFavButton() {
   const btn = $('btn-favourite');
   const isFav = state.favourites.some((f) => f.name === state.current.name);
   btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
-  btn.textContent = isFav ? '★ Favourited' : '☆ Favourite';
+  btn.textContent = isFav ? '★ ප්‍රියතම' : '☆ ප්‍රියතම';
 }
 $('btn-favourite').addEventListener('click', () => {
   const idx = state.favourites.findIndex((f) => f.name === state.current.name);
@@ -575,7 +623,7 @@ function renderFavourites() {
   state.favourites.forEach((c) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'city-card';
-    b.innerHTML = `<span class="name">★ ${c.name}</span><div class="muted small">${c.region || ''}</div>`;
+    b.innerHTML = `<span class="name">★ ${nameOf(c)}</span><div class="muted small">${provinceLabel(c)}</div>`;
     b.addEventListener('click', () => { loadWeather({ ...c }); showView('dashboard'); });
     els.favList.appendChild(b);
   });
@@ -586,7 +634,7 @@ $('btn-clear-favs').addEventListener('click', () => {
   renderFavourites(); updateFavButton();
 });
 
-// ---- Search (Open-Meteo Geocoding, Sri Lanka only) ----
+/* ---------- search ---------- */
 let debounce = 0;
 els.input.addEventListener('input', () => {
   clearTimeout(debounce);
@@ -606,7 +654,7 @@ async function doSearch() {
     const j = await fetchJSON(`${API.geocoding}?${p.toString()}`);
     els.results.innerHTML = '';
     if (!j.results || !j.results.length) {
-      els.results.innerHTML = `<li class="muted">No results for “${q}” in Sri Lanka. Try a major town (e.g. Colombo, Kandy, Galle).</li>`;
+      els.results.innerHTML = `<li class="muted">“${q}” සඳහා ශ්‍රී ලංකාවේ ප්‍රතිඵල නැත. ප්‍රධාන නගරයක් උත්සාහ කරන්න.</li>`;
       els.results.hidden = false;
       return;
     }
@@ -614,11 +662,12 @@ async function doSearch() {
       const li = document.createElement('li');
       li.setAttribute('role', 'option');
       li.tabIndex = 0;
-      li.innerHTML = `<strong>${r.name}</strong><br><span class="sub">${[r.admin1, r.country].filter(Boolean).join(' · ')} · ${r.latitude.toFixed(3)}, ${r.longitude.toFixed(3)}</span>`;
+      const si = sinhalizeName(r.name);
+      li.innerHTML = `<strong>${si ? `${si} (${r.name})` : r.name}</strong><br><span class="sub">${[r.admin1, r.country].filter(Boolean).join(' · ')} · ${r.latitude.toFixed(3)}, ${r.longitude.toFixed(3)}</span>`;
       const pick = () => {
         els.results.hidden = true;
-        els.input.value = r.name;
-        loadWeather({ name: r.name, lat: r.latitude, lon: r.longitude, region: r.admin1 || '', admin1: r.admin1 });
+        els.input.value = si || r.name;
+        loadWeather({ name: r.name, si, lat: r.latitude, lon: r.longitude, region: (r.admin1 || '').replace(/ Province$/, ''), admin1: r.admin1 });
         showView('dashboard');
       };
       li.addEventListener('click', pick);
@@ -627,69 +676,92 @@ async function doSearch() {
     });
     els.results.hidden = false;
   } catch {
-    els.results.innerHTML = `<li class="muted">Search failed. Check connection.</li>`;
+    els.results.innerHTML = `<li class="muted">සෙවීම අසාර්ථකයි. සම්බන්ධතාවය පරීක්ෂා කරන්න.</li>`;
     els.results.hidden = false;
   }
 }
 $('search-form').addEventListener('submit', (e) => e.preventDefault());
 
-// Geolocation
+/* ---------- geolocation ---------- */
 $('btn-locate').addEventListener('click', () => {
-  if (!navigator.geolocation) { showError('Geolocation is not supported in this browser.'); return; }
-  setStatus('Locating…');
+  if (!navigator.geolocation) { showError('මෙම බ්‍රවුසරයේ ස්ථාන සේවා නොමැත.'); return; }
+  setStatus('ස්ථානය සොයමින්…', '');
+  setLoading(true);
   navigator.geolocation.getCurrentPosition(
-    (pos) => loadWeather({ name: 'My location', lat: pos.coords.latitude, lon: pos.coords.longitude, region: 'Sri Lanka' }),
-    () => { showError('Could not get your location. Allow location access or search a city.'); setStatus('Location unavailable.'); },
+    (pos) => {
+      setLoading(false);
+      loadWeather({ name: 'My location', si: 'මගේ ස්ථානය', lat: pos.coords.latitude, lon: pos.coords.longitude, region: 'Sri Lanka' });
+    },
+    () => {
+      setLoading(false);
+      showError('ඔබේ ස්ථානය ලබාගත නොහැක. ස්ථාන අවසරය ලබා දෙන්න හෝ නගරයක් සොයන්න.');
+      setStatus('ස්ථානය ලබාගත නොහැක.');
+    },
     { enableHighAccuracy: true, timeout: 8000 }
   );
 });
 
-// Refresh + retry
+/* ---------- refresh / retry ---------- */
 $('btn-refresh').addEventListener('click', () => loadWeather(state.current));
 $('btn-retry').addEventListener('click', () => loadWeather(state.current));
 
-// Unit toggle
+function renderOverviewFromCache() {
+  els.overview.querySelectorAll('[data-city]').forEach((el) => {
+    const place = CITIES.find((c) => c.name === el.dataset.city);
+    const d = state.overviewData[el.dataset.city];
+    if (!place || !d) return;
+    const [label, icon] = wmo(d.code);
+    el.innerHTML = `<strong>${place.si} ${icon}</strong><span class="temp">${fmtTemp(d.temp)}</span><br><span class="muted small">${label}</span>`;
+  });
+}
+
+/* ---------- unit toggle ---------- */
 function setUnit(u) {
   state.unit = u;
   localStorage.setItem('lk-weather-unit', u);
   $('btn-c').classList.toggle('is-active', u === 'c');
   $('btn-f').classList.toggle('is-active', u === 'f');
-  if (state.forecast) { renderCurrent(); renderHourly(); renderDaily(); renderMarine(); renderCitiesGrid(); loadOverview(); }
+  if (state.forecast) {
+    renderCurrent(); renderHourly(); renderDaily(); renderMarine();
+    renderCitiesGrid(); renderOverviewFromCache();
+  }
 }
 $('btn-c').addEventListener('click', () => setUnit('c'));
 $('btn-f').addEventListener('click', () => setUnit('f'));
 
-// ---- Map (Leaflet) ----
+/* ---------- map ---------- */
 function initMap() {
   if (state.map || !window.L) return;
-  const center = [7.8731, 80.7711]; // Sri Lanka centre
+  const center = [7.8731, 80.7711];
   state.map = L.map('leaflet-map').setView(center, 8);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> දායකයින්',
   }).addTo(state.map);
 
   CITIES.forEach((c) => {
     const m = L.marker([c.lat, c.lon]).addTo(state.map);
-    m.bindPopup(`<strong>${c.name}</strong><br>${c.region}<br><button onclick="window.__lkSelect&&window.__lkSelect('${c.name}')">View weather</button>`);
+    m.bindPopup(`<strong>${c.si}</strong><br>${provinceLabel(c)}<br><button onclick="window.__lkSelect&&window.__lkSelect('${c.name}')">අනාවැකිය බලන්න</button>`);
     m.on('click', () => { loadWeather({ ...c }); });
   });
 }
 window.__lkSelect = (name) => { const c = CITIES.find((x) => x.name === name); if (c) { loadWeather({ ...c }); showView('dashboard'); } };
 
-// ---- Init ----
+/* ---------- init ---------- */
 (function init() {
   setUnit(state.unit);
   renderQuickCities();
   renderCitiesGrid();
   renderFavourites();
+  loadWeather(CITIES[0]).then(() => loadOverview());
 
-  let initial = CITIES[0];
-  try {
-    const last = JSON.parse(localStorage.getItem('lk-weather-last-place') || 'null');
-    if (last && last.lat != null) initial = last;
-  } catch {}
-
-  loadWeather(initial).then(() => loadOverview());
-  window.addEventListener('resize', () => { if (state.forecast) renderHourly(); });
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (state.forecast) renderHourly();
+      if (state.map) state.map.invalidateSize();
+    }, 150);
+  });
+  window.addEventListener('orientationchange', () => setTimeout(() => state.map && state.map.invalidateSize(), 300));
 })();

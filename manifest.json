@@ -1,14 +1,15 @@
 {
-  "name": "Sri Lanka Weather Dashboard",
-  "short_name": "LK Weather",
-  "description": "Live weather for Sri Lanka — current, hourly, 7-day, air quality and marine.",
+  "name": "SSS Sea Food Suppliers — කාලගුණ උපකරණ පුවරුව",
+  "short_name": "SSS Sea Food",
+  "description": "SSS Sea Food Suppliers සඳහා ශ්‍රී ලංකා කාලගුණ උපකරණ පුවරුව — දැනට කාලගුණය, පැය 24, දින 7, වායු ගුණාත්මකභාවය සහ මුහුදු තත්ත්වය.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#0b3d5c",
+  "lang": "si",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌦️</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐟</text></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
