@@ -1,0 +1,17 @@
+{
+  "name": "Sri Lanka Weather Dashboard",
+  "short_name": "LK Weather",
+  "description": "Live weather for Sri Lanka — current, hourly, 7-day, air quality and marine.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#0b3d5c",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌦️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
