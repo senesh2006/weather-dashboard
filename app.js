@@ -321,7 +321,7 @@ function drawHourlyChart(temps, times) {
   const canvas = els.hourlyChart;
   const dpr = window.devicePixelRatio || 1;
   const cssW = canvas.clientWidth || canvas.parentElement.clientWidth || 600;
-  const cssH = 140;
+  const cssH = 180;
   canvas.width = cssW * dpr;
   canvas.height = cssH * dpr;
   canvas.style.height = cssH + 'px';
@@ -330,48 +330,61 @@ function drawHourlyChart(temps, times) {
   ctx.clearRect(0, 0, cssW, cssH);
 
   const vals = temps.map(toTemp);
+  if (!vals.length) return;
   const min = Math.min(...vals), max = Math.max(...vals);
-  const pad = Math.max(2, (max - min) * 0.2);
+  const range = Math.max(1, max - min);
+  const pad = Math.max(1.5, range * 0.25);
   const lo = min - pad, hi = max + pad;
-  const xStep = (cssW - 24) / Math.max(1, vals.length - 1);
 
-  // Grid
+  const padLeft = 40, padRight = 14, padTop = 22, padBottom = 30;
+  const plotW = Math.max(100, cssW - padLeft - padRight);
+  const plotH = cssH - padTop - padBottom;
+  const xStep = plotW / Math.max(1, vals.length - 1);
+  const xFor = (i) => padLeft + i * xStep;
+  const yFor = (v) => padTop + plotH * (1 - (v - lo) / (hi - lo));
+
+  // Grid + Y labels (right-aligned in left gutter so they never overlap data)
   ctx.strokeStyle = '#e2e8f0';
   ctx.fillStyle = '#5b6b7d';
   ctx.font = '11px system-ui';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
   for (let g = 0; g <= 2; g++) {
-    const y = 10 + (cssH - 30) * (g / 2);
-    ctx.beginPath(); ctx.moveTo(12, y); ctx.lineTo(cssW - 12, y); ctx.stroke();
+    const y = padTop + plotH * (g / 2);
+    const t = hi - (hi - lo) * (g / 2);
+    ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(padLeft + plotW, y); ctx.stroke();
+    ctx.fillText(`${Math.round(t)}°`, padLeft - 8, y);
   }
-  ctx.fillText(`${Math.round(hi)}°`, 14, 14);
-  ctx.fillText(`${Math.round(lo)}°`, 14, cssH - 12);
 
   // Line
   ctx.strokeStyle = '#0e6ea8';
   ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
   ctx.beginPath();
   vals.forEach((v, i) => {
-    const x = 12 + i * xStep;
-    const y = 10 + (cssH - 30) * (1 - (v - lo) / (hi - lo));
+    const x = xFor(i), y = yFor(v);
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
   ctx.stroke();
 
-  // Dots + labels every 4h
-  ctx.fillStyle = '#0b3d5c';
+  // Dots + centered labels (temp above dot, time below plot) — clamped to canvas
+  const labelEvery = cssW < 480 ? 6 : 3;
   vals.forEach((v, i) => {
-    const x = 12 + i * xStep;
-    const y = 10 + (cssH - 30) * (1 - (v - lo) / (hi - lo));
-    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
-    if (i % 4 === 0) {
+    const x = xFor(i), y = yFor(v);
+    ctx.fillStyle = '#0b3d5c';
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+    if (i % labelEvery === 0 || i === vals.length - 1) {
+      const cx = Math.min(Math.max(x, padLeft + 14), padLeft + plotW - 14);
+      ctx.textAlign = 'center';
       ctx.fillStyle = '#0f2436';
       ctx.font = 'bold 11px system-ui';
-      ctx.fillText(`${Math.round(v)}°`, x - 8, y - 6);
+      ctx.fillText(`${Math.round(v)}°`, cx, Math.max(11, y - 10));
       ctx.fillStyle = '#5b6b7d';
-      ctx.font = '10px system-ui';
-      ctx.fillText(formatLocal(times[i]), x - 16, cssH - 4);
+      ctx.font = '11px system-ui';
+      ctx.fillText(formatLocal(times[i]), cx, cssH - 10);
     }
   });
+  ctx.textAlign = 'left';
 }
 
 function renderDaily() {
