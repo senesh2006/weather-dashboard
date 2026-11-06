@@ -58,6 +58,7 @@ push to `main` deploys the site.
 ├── style.css       # Styles + mobile layer + loading animations
 ├── app.js          # Fetch, render, search, map, favourites
 ├── manifest.json   # PWA manifest
+├── icon.svg        # App / favicon icon
 └── README.md
 ```
 
