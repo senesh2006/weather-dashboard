@@ -217,7 +217,7 @@ async function loadWeather(place, { silent = false } = {}) {
     renderMarine();
     renderOverview(); // refresh overview highlight
 
-    const nowColombo = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Colombo', dateStyle: 'medium', timeStyle: 'short' });
+    const nowColombo = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Colombo', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     setStatus(`Showing data for ${place.name} · Source: Open-Meteo`, `Updated ${nowColombo} (Asia/Colombo)`);
     localStorage.setItem('lk-weather-last-place', JSON.stringify(place));
   } catch (e) {
@@ -237,7 +237,7 @@ function renderCurrent() {
   els.condition.textContent = label;
   els.feels.textContent = `Feels like ${fmtTemp(c.apparent_temperature)} · ${isDay ? 'Daytime' : 'Night'}`;
   els.icon.textContent = isDay ? icon : (c.weather_code === 0 ? '🌙' : icon);
-  els.date.textContent = new Date(c.time).toLocaleString('en-GB', { timeZone: 'Asia/Colombo', weekday: 'long', dateStyle: 'medium', timeStyle: 'short' }) + ' (Asia/Colombo)';
+  els.date.textContent = new Date(c.time).toLocaleString('en-GB', { timeZone: 'Asia/Colombo', weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' (Asia/Colombo)';
 
   // Daily today for sunrise/sunset/uv/precip
   const today = d.daily && d.daily.time ? 0 : -1;
